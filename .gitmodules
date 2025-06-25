@@ -1,0 +1,6 @@
+[submodule "external_libs/libwebsockets"]
+	path = external_libs/libwebsockets
+	url = https://github.com/warmcat/libwebsockets.git
+[submodule "external_libs/cJson"]
+	path = external_libs/cJson
+	url = https://github.com/DaveGamble/cJSON.git

@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c40dda4f..902cea07 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -93,8 +93,11 @@ if (ESP_PLATFORM)
+ 		$ENV{IDF_PATH}/components/xtensa/${CONFIG_IDF_TARGET}/include/
+ 		$ENV{IDF_PATH}/components/freertos/include/esp_additions
+ 		$ENV{IDF_PATH}/components/hal/include
+-		$ENV{IDF_PATH}/components/soc/${CONFIG_IDF_TARGET}/include/
++		$ENV{IDF_PATH}/components/soc/${CONFIG_IDF_TARGET}/register/
+ 		$ENV{IDF_PATH}/components/soc/include/
++		$ENV{IDF_PATH}/components/esp_rom/${CONFIG_IDF_TARGET}/include/
++		$ENV{IDF_PATH}/components/esp_rom/${CONFIG_IDF_TARGET}/include/${CONFIG_IDF_TARGET}
++		$ENV{IDF_PATH}/components/soc/${CONFIG_IDF_TARGET}/include/
+ 		$ENV{IDF_PATH}/components/esp_hw_support/include
+ 		$ENV{IDF_PATH}/components/hal/${CONFIG_IDF_TARGET}/include/
+ 		$ENV{IDF_PATH}/components/app_update/include/
+@@ -110,6 +113,9 @@ if (ESP_PLATFORM)
+ 		$ENV{IDF_PATH}/components/esp_driver_gpio/include
+ 		$ENV{IDF_PATH}/components/esp_driver_spi/include
+ 		$ENV{IDF_PATH}/components/esp_driver_ledc/include
++		# $ENV{IDF_PATH}/components/driver/gpio/include
++		# $ENV{IDF_PATH}/components/driver/spi/include
++		# $ENV{IDF_PATH}/components/driver/ledc/include
+ 		$ENV{IDF_PATH}/components/esp_partition/include
+ 		$ENV{IDF_PATH}/components/spi_flash/include
+ 		$ENV{IDF_PATH}/components/esp_app_format/include
+diff --git a/include/libwebsockets/lws-freertos.h b/include/libwebsockets/lws-freertos.h
+index 46cd3ff5..cddcd735 100644
+--- a/include/libwebsockets/lws-freertos.h
++++ b/include/libwebsockets/lws-freertos.h
+@@ -67,8 +67,9 @@ struct pollfd {
+ #include "esp_event.h"
+ //#include "esp_event_loop.h"
+ #include "nvs.h"
++// #include "rom/gpio.h"
+ #include "driver/gpio.h"
+-#include "spi_flash_mmap.h"
++// #include "spi_flash_mmap.h"
+ #include "freertos/timers.h"
+ 
+ #if defined(LWS_ESP_PLATFORM)

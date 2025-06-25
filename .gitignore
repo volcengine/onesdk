@@ -1,0 +1,77 @@
+# IDE generated files
+.vscode/
+.idea/
+*.orig
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# build files
+
+build/
+CMakeFiles/
+Makefile
+lib/
+CMakeCache.txt
+_CPack_Packages/
+compile_commands.json
+.cache/
+
+# clion
+cmake-build-debug/
+
+# examples execludes
+examples/onesdk-esp32/components/
+examples/onesdk_esp32/onesdk/
+dependencies.lock
+.DS_Store

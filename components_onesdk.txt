@@ -1,0 +1,18 @@
+file(GLOB_RECURSE SRC_FILES "src/*.c" "platform/*.c", "external_libs/cJson/cJSON*.c")
+
+idf_component_register(SRCS ${SRC_FILES}
+                    REQUIRES spi_flash esp_netif nvs_flash esp_wifi esp_driver_gpio mbedtls
+                    INCLUDE_DIRS "." "include" "platform" "src" "external_libs/cJson" 
+                    )
+# Generate the onesdk_config.h that includes all the public compilation settings.
+configure_file(
+       "${COMPONENT_DIR}/cmake/onesdk_config.h.in"
+       "${PROJECT_BINARY_DIR}/onesdk/include/onesdk_config.h"
+	   )
+file(COPY "${PROJECT_BINARY_DIR}/onesdk/include/onesdk_config.h" DESTINATION "${COMPONENT_DIR}/include")
+ # link with libwebsockets starts
+# target_link_libraries(${COMPONENT_LIB} PRIVATE websockets)
+message(STATUS "${COMPONENT_LIB}: libwebsockets build directory: ${PROJECT_BINARY_DIR}/../libwebsockets/include")
+target_include_directories(${COMPONENT_LIB} PRIVATE "${PROJECT_BINARY_DIR}/../libwebsockets/include")
+message(STATUS "${COMPONENT_LIB}: ${PROJECT_SOURCE_DIR}libwebsockets build directory: ${PROJECT_BINARY_DIR}/../libwebsockets/lib")
+# link with libwebsockets ends

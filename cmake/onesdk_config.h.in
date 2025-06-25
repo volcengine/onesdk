@@ -1,0 +1,3 @@
+#cmakedefine ONESDK_ENABLE_AI
+#cmakedefine ONESDK_ENABLE_AI_REALTIME
+#cmakedefine ONESDK_ENABLE_IOT

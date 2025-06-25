@@ -1,0 +1,32 @@
+menu "Example Configuration"
+
+choice AUDIO_DECODER_SUPPORT
+    prompt "Audio Decoder"
+    default AUDIO_SUPPORT_RAW_DECODER
+
+config AUDIO_SUPPORT_G711A_DECODER
+    bool "AUDIO-G711-DECODER"
+
+config AUDIO_SUPPORT_OPUS_DECODER
+    bool "AUDIO-OPUS-DECODER"
+
+config AUDIO_SUPPORT_AAC_DECODER
+    bool "AUDIO-AAC-DECODER"
+config AUDIO_SUPPORT_RAW_DECODER
+    bool "AUDIO-RAW-DECODER"
+    prompt "AUDIO-RAW-DECODER(API GW send/recv raw data)"
+endchoice
+
+choice AUDIO_CONVERSATION_MODE_SUPPORT
+    prompt "Conversion Mode"
+    default LANGUAGE_WAKEUP_MODE
+
+config LANGUAGE_WAKEUP_MODE
+    bool "LANGUAGE-WAKEUP-MODE"
+
+config CONTINUOUS_CONVERSATION_MODE
+    bool "CONTINUOUS-CONVERSATION-MODE"
+
+endchoice
+
+endmenu
