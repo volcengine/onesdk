@@ -75,3 +75,5 @@ examples/onesdk-esp32/components/
 examples/onesdk_esp32/onesdk/
 dependencies.lock
 .DS_Store
+./external_libs/cJson/
+./external_libs/libwebsockets/

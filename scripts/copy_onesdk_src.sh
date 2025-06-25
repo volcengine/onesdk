@@ -21,5 +21,5 @@ fi
 for example_dir in "onesdk_esp32" "onesdk_esp32_audio"; do
     cp -rv "$ONESDK_ROOT_DIR/build/output/"* "$ONESDK_ROOT_DIR/examples/${example_dir}/"
     cp -v "$ONESDK_ROOT_DIR/components_onesdk.txt" "$ONESDK_ROOT_DIR/examples/${example_dir}/components/onesdk/CMakeLists.txt"
-    cp -v "$ONESDK_ROOT_DIR/libwebsockets_cmakelists.txt" "$ONESDK_ROOT_DIR/examples/${example_dir}/libwebsockets/CMakeLists.txt"
+    # cp -v "$ONESDK_ROOT_DIR/libwebsockets_cmakelists.txt" "$ONESDK_ROOT_DIR/examples/${example_dir}/libwebsockets/CMakeLists.txt"
 done

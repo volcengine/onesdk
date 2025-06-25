@@ -19,7 +19,38 @@
 
 ## 配置、编译命令
 
+**首次编译本example时必须**
+
+> [!IMPORTANT]
+> 首次运行时，需要将onesdk和libwebsockets等相关依赖链接或者拷贝到当前目录下
+> 所以，需要在项目的**根目录**下执行如下命令
+
+```bash
+bash build.sh -DONESDK_EXTRACT_SRC=ON
+bash scripts/copy_onesdk_src.sh
+
+# 确保目录下存在相关文件内容
+ls -l examples/onesdk_esp32_audio
+total 48
+-rw-r--r--@  1 bytedance  wheel  2385  6 25 19:45 CMakeLists.txt
+drwxr-xr-x@  3 bytedance  wheel    96  6 25 19:50 components
+-rw-r--r--@  1 bytedance  wheel  1861  6 25 19:45 libwebsockes-diff.diff
+drwxr-xr-x@ 32 bytedance  wheel  1024  6 25 19:50 libwebsockets
+drwxr-xr-x@ 11 bytedance  wheel   352  6 25 19:45 main
+-rw-r--r--@  1 bytedance  wheel   311  6 25 19:45 partitions_example.csv
+-rw-r--r--@  1 bytedance  wheel  2424  6 25 19:45 README.md
+-rw-r--r--@  1 bytedance  wheel   714  6 25 19:45 sdkconfig.defaults
+-rw-r--r--@  1 bytedance  wheel   709  6 25 19:45 sdkconfig.defaults.esp32s3
+
+```
+> [!IMPORTANT]
+> 以下操作均在**当前文件夹(examples/onesdk_esp32_audio)**下执行
+
 > 以下操作均在当前文件夹下执行
+
+**启用ESP环境变量**
+
+[第四步：设置环境变量](https://docs.espressif.com/projects/esp-idf/zh_CN/stable/esp32/get-started/linux-macos-setup.html#get-started-set-up-env)
 
 
 **配置编译目标为 ESP32S3**

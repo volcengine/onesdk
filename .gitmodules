@@ -1,6 +1,8 @@
-[submodule "external_libs/libwebsockets"]
-	path = external_libs/libwebsockets
-	url = https://github.com/warmcat/libwebsockets.git
 [submodule "external_libs/cJson"]
 	path = external_libs/cJson
 	url = https://github.com/DaveGamble/cJSON.git
+	branch = v1.7.18
+[submodule "external_libs/libwebsockets"]
+	path = external_libs/libwebsockets
+	url = https://github.com/warmcat/libwebsockets
+	branch = v4.3.5

@@ -25,7 +25,7 @@ OneSDK是一个面向AI应用的端侧集成开发套件，提供包括大模型
 ## 功能特性
 
 ### 整体架构
-![alt text](images/functions.png)
+![alt text](images/functions.zh_CN.png)
 
 ### 功能清单
 - 设备智能
@@ -57,7 +57,10 @@ OneSDK是一个面向AI应用的端侧集成开发套件，提供包括大模型
 
 ### 安装、编译、运行
 
-参考 [边缘智能-OneSDK集成说明](https://bytedance.larkoffice.com/wiki/VlHsw5p76i1iSUkOcXJclg4Nnaf#share-TewzdIpI5o5BisxAW2HcKJfBnSc) 构建编译和运行
+参考 [开发指导](docs/develop.zh_CN.md)
+
+Note:
+对于中文商业化客户，建议参考 [边缘智能-OneSDK集成说明](https://bytedance.larkoffice.com/wiki/VlHsw5p76i1iSUkOcXJclg4Nnaf#share-TewzdIpI5o5BisxAW2HcKJfBnSc) 构建编译和运行
 
 
 ## 贡献

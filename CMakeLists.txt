@@ -20,15 +20,20 @@ option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
 option(ONESDK_WITH_STRICT_MODE "Build onesdk with ADDRESS SANTITIZE mode" OFF)
 option(ONESDK_WITH_EXAMPLE_EXTRA "Build extra examples, for internal use only" OFF)
-# set lws 相关配置
 
 # Generate the onesdk_config.h that includes all the public compilation settings.
 configure_file(
        "${PROJECT_SOURCE_DIR}/cmake/onesdk_config.h.in"
        "${PROJECT_BINARY_DIR}/include/onesdk_config.h")
 
+# set lws 相关配置
 
 option(LWS_WITH_TLS "Build with TLS support" ON)
+option(LWS_WITH_MINIMAL_EXAMPLES "Build with examples" OFF)
+if(ONESDK_ENABLE_IOT)
+	option(LWS_ROLE_MQTT "Build with support for MQTT client" ON)
+	set(LWS_ROLE_MQTT ON)
+endif()
 # 添加一个选项来控制是否抽取源文件
 option(ONESDK_EXTRACT_SRC "Extract source files to output/onesdk" OFF)
 
