@@ -1,14 +1,14 @@
-# 添加clean-build参数处理
+# Add clean-build parameter handling
 if [ "$1" = "clean-build" ]; then
     rm -rf build
-    shift  # 移除clean-build参数
+    shift  # Remove clean-build parameter
 fi
 
 mkdir -p build
 cd build
 cmake $@ ..
 
-# 检查nproc是否存在
+# Check if nproc exists
 if command -v nproc >/dev/null 2>&1; then
     jobs=$(nproc)
 else

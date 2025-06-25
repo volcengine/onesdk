@@ -144,5 +144,6 @@ cd onesdk
     运行 `idf.py menuconfig`，进入 `Component config -> ESP System Settings`，将 `Main task stack size`（主任务堆栈大小）增加到 `5000` 或更大值后重新编译。
 
 ### 火山引擎产品链接
-[IOT Platform](https://www.volcengine.com/docs/6893/1455924)
-[AI Gateway](https://www.volcengine.com/docs/6893/1263412)
+
+- [IOT Platform](https://www.volcengine.com/docs/6893/1455924)
+- [AI Gateway](https://www.volcengine.com/docs/6893/1263412)

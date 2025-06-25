@@ -1,4 +1,4 @@
-# CMake 最低版本号要求
+# CMake minimum version requirement
 cmake_minimum_required(VERSION 3.6)
 
 project(onesdk VERSION 0.1)
@@ -6,14 +6,14 @@ project(onesdk VERSION 0.1)
 set(CMAKE_C_STANDARD 11)
 
 # ### ONESDK OPTIONS  ###
-# 是否使能AI功能
+# Enable AI functionality
 option(ONESDK_ENABLE_AI "Enable AI functionality" ON)
-# 是否使能实时AI功能
+# Enable real-time AI functionality
 option(ONESDK_ENABLE_AI_REALTIME "Enable real-time AI functionality" ON)
-# 是否使能物联网功能
+# Enable IoT functionality
 option(ONESDK_ENABLE_IOT "Enable IoT functionality" ON)
 
-# 定义编译选项
+# Define compilation options
 option(ONESDK_WITH_EXAMPLE "Build onesdk examples" ON)
 option(ONESDK_WITH_TEST "Build onesdk unit tests" ON)
 option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
@@ -26,7 +26,7 @@ configure_file(
        "${PROJECT_SOURCE_DIR}/cmake/onesdk_config.h.in"
        "${PROJECT_BINARY_DIR}/include/onesdk_config.h")
 
-# set lws 相关配置
+# Set libwebsockets related configuration
 
 option(LWS_WITH_TLS "Build with TLS support" ON)
 option(LWS_WITH_MINIMAL_EXAMPLES "Build with examples" OFF)
@@ -34,38 +34,49 @@ if(ONESDK_ENABLE_IOT)
 	option(LWS_ROLE_MQTT "Build with support for MQTT client" ON)
 	set(LWS_ROLE_MQTT ON)
 endif()
-# 添加一个选项来控制是否抽取源文件
+# Add an option to control whether to extract source files
 option(ONESDK_EXTRACT_SRC "Extract source files to output/onesdk" OFF)
 
 if(ONESDK_EXTRACT_SRC)
-    # 定义输出目录 作为components输出
+    # Define output directory as components output
     set(EXTRACT_OUTPUT_COMPONENTS_DIR "${PROJECT_BINARY_DIR}/output/components/onesdk")
 
-    # 复制 include 目录
+    # Copy include directory
     file(COPY "${PROJECT_SOURCE_DIR}/include" DESTINATION "${EXTRACT_OUTPUT_COMPONENTS_DIR}")
 
-    # 复制 platform 目录（如果存在）
+    # Copy platform directory (if exists)
     if(EXISTS "${PROJECT_SOURCE_DIR}/platform")
         file(COPY "${PROJECT_SOURCE_DIR}/platform" DESTINATION "${EXTRACT_OUTPUT_COMPONENTS_DIR}")
     endif()
 
-    # 复制 src 目录
+    # Copy src directory
     file(COPY "${PROJECT_SOURCE_DIR}/src" DESTINATION "${EXTRACT_OUTPUT_COMPONENTS_DIR}")
 
-    # 复制 external_libs 目录 only cJson
+    # Copy external_libs directory only cJson
     file(COPY "${PROJECT_SOURCE_DIR}/external_libs/cJson" DESTINATION "${EXTRACT_OUTPUT_COMPONENTS_DIR}/external_libs")
 
-	# 复制cmake目录
+	# Copy cmake directory
     file(COPY "${PROJECT_SOURCE_DIR}/cmake" DESTINATION "${EXTRACT_OUTPUT_COMPONENTS_DIR}")
-    # 定义输出目录 作为onesdk依赖的libwebsockets，先于onesdk构建
+    # Define output directory as onesdk dependent libwebsockets, build before onesdk
     set(EXTRACT_OUTPUT_LIBWEBSOCKETS_DIR "${PROJECT_BINARY_DIR}/output/")
-    # 复制 lbwebsockets 目录
-    file(COPY "${PROJECT_SOURCE_DIR}/external_libs/libwebsockets" DESTINATION "${EXTRACT_OUTPUT_LIBWEBSOCKETS_DIR}/")
+    # Copy libwebsockets directory
+    # file(COPY "${PROJECT_SOURCE_DIR}/external_libs/libwebsockets" DESTINATION "${EXTRACT_OUTPUT_LIBWEBSOCKETS_DIR}/")
 
+    # Apply libwebsockets patch
+    execute_process(
+        COMMAND ${CMAKE_COMMAND} -E echo "Patching libwebsockets..."
+    )
+    execute_process(
+        COMMAND patch -d ${PROJECT_SOURCE_DIR}/external_libs/libwebsockets -p1 -N -i ${PROJECT_SOURCE_DIR}/libwebsockets-v4.3.patch
+        RESULT_VARIABLE PATCH_RESULT
+    )
+    if(NOT PATCH_RESULT EQUAL 0)
+        message(WARNING "libwebsockets patch may have already been applied or failed to apply.")
+    endif()
 endif()
 # ### ONESDK OPTIONS end ###
 
-# 编译工具链
+# Compilation toolchain
 set(COMPILE_TOOLS "gcc")
 set(BUILD_PLATFORM "linux")
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
@@ -77,7 +88,7 @@ set(EXTERNAL_LIB_DIR "${PROJECT_SOURCE_DIR}/external_libs" CACHE INTERNAL "exter
 
 message(STATUS "PROJECT SRC DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "PROJECT BIN DIR: ${PROJECT_BINARY_DIR}")
-# 将 include 和 external_libs/include 添加到头文件搜索路径
+# Add include and external_libs/include to header file search path
 include_directories(
 		${PROJECT_SOURCE_DIR}/include
 		${PROJECT_SOURCE_DIR}/include/iot
@@ -97,19 +108,19 @@ if (ONESDK_WITH_EXAMPLE)
 endif()
 add_subdirectory(external_libs)
 
-# 在 macOS 平台添加 CoreFoundation 框架
+# Add CoreFoundation framework on macOS platform
 if(BUILD_PLATFORM STREQUAL "macos")
 	set(COREFOUNDATION_FRAMEWORK "-framework CoreFoundation")
 else()
 	set(COREFOUNDATION_FRAMEWORK "")
 endif()
 
-# 编译类型: release/debug
+# Build type: release/debug
 set(BUILD_TYPE "debug")
 
 file(GLOB SOURCE "${PROJECT_SOURCE_DIR}/src/*.c")
 
-# source 目录
+# source directory
 # aux_source_directory(src ONESDK_SRC_DIRS)
 
 # file(GLOB_RECURSE ONESDK_SRCS "src/*.c")
@@ -151,7 +162,7 @@ if (ONESDK_ENABLE_IOT)
 	)
 endif()
 
-# 链接 libwebsockets 库
+# Link libwebsockets library
 if (ONESDK_WITH_SHARED)
     add_library(onesdk_shared SHARED ${ONESDK_SRCS})
     target_link_libraries(onesdk_shared PRIVATE
@@ -172,10 +183,10 @@ endif()
 ## compiler options ##
 include(CheckCCompilerFlag)
 
-# 检查编译器是否支持 -Wincompatible-pointer-types 选项
+# Check if compiler supports -Wincompatible-pointer-types option
 check_c_compiler_flag(-Wincompatible-pointer-types HAS_INCOMPATIBLE_POINTER_TYPES)
 if (HAS_INCOMPATIBLE_POINTER_TYPES)
-    # 如果支持，将其作为错误处理
+    # If supported, treat it as an error
     if (ONESDK_WITH_STATIC)
 		target_compile_options(${PROJECT_NAME} PRIVATE -Werror=incompatible-pointer-types)
 	endif()
@@ -196,7 +207,7 @@ endif()
 ## compiler options ##
 
 if (APPLE)
-	# 根据intel还是arm架构判断
+	# Determine based on intel or arm architecture
 	message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 	if (CMAKE_SYSTEM_PROCESSOR STREQUAL "arm64")
 		include_directories("/opt/homebrew/include")
@@ -215,7 +226,7 @@ if (APPLE)
 	# list (APPEND AWS_COMMON_OS_SRC "source/platform_fallback_stubs/system_info.c")
 endif()
 
-# 输出include所有文件，供依赖项目引用
+# Output include files for dependent projects to reference
 file(COPY ${PROJECT_SOURCE_DIR}/include DESTINATION ${PROJECT_BINARY_DIR})
 
 
@@ -264,13 +275,13 @@ if (ONESDK_WITH_TEST AND NOT APPLE)
 		GIT_REPOSITORY https://github.com/cpptest/cpptest.git
 		GIT_TAG        master # or use release tag, eg. v4.0
 		# FIND_PACKAGE_ARGS # Recent CMake versions can integrate FetchContent with find_package
-		# https://cmake.org/cmake/help/latest/module/FetchContent.html#integrating-with-find-package
+		# https://cmake.org/cmake/help/latest/module/FetchContent.html#integrating-with-find_package
 	)
 	FetchContent_MakeAvailable(CppUTest)
-	# 添加头文件包含路径
+	# Add header file include path
 	include_directories(${CppUTest_SOURCE_DIR}/include)
 
-	# 添加编译选项
+	# Add compilation options
 	add_compile_options(
     	"$<$<COMPILE_LANGUAGE:CXX>:-include${CppUTest_SOURCE_DIR}/include/CppUTest/MemoryLeakDetectorNewMacros.h>"
     	"$<$<COMPILE_LANGUAGE:C>:-include${CppUTest_SOURCE_DIR}/include/CppUTest/MemoryLeakDetectorMallocMacros.h>"
@@ -278,13 +289,13 @@ if (ONESDK_WITH_TEST AND NOT APPLE)
 
 	set(CPPUTEST_LDFLAGS
 		CppUTest::CppUTest
-		CppUTest::CppUTestExt  # 添加Mock支持
+		CppUTest::CppUTestExt  # Add Mock support
 	)
 
 	add_subdirectory(tests)
     if (ONESDK_WITH_SHARED)
-	    # 覆盖率
-	    # 添加覆盖率编译选项（在 add_executable 后添加）
+	    # Coverage
+	    # Add coverage compilation options (add after add_executable)
 	    if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 		    target_compile_options(onesdk_shared PUBLIC
 			    -fprofile-arcs -ftest-coverage
@@ -298,8 +309,8 @@ if (ONESDK_WITH_TEST AND NOT APPLE)
 	    set(COVERATE_LDFLAGS "--coverage")
 	endif()
 	if (ONESDK_WITH_STATIC)
-	    # 覆盖率
-	    # 添加覆盖率编译选项（在 add_executable 后添加）
+	    # Coverage
+	    # Add coverage compilation options (add after add_executable)
 	    if (CMAKE_BUILD_TYPE STREQUAL "Coverage")
 		    target_compile_options(onesdk PUBLIC
 			    -fprofile-arcs -ftest-coverage

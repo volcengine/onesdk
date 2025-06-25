@@ -133,7 +133,7 @@ void parse_sse_message(sse_context_t *ctx, const char *message, size_t len) {
             }
             //
             if (strcmp(key, "event") == 0) {
-                printf("  Event: %s\n", value);
+                // printf("  Event: %s\n", value);
                 if (ctx->event) {
                     free(ctx->event);
                     ctx->event = NULL;
@@ -145,7 +145,7 @@ void parse_sse_message(sse_context_t *ctx, const char *message, size_t len) {
                     ctx->event_len = strlen(value);
                 }
             } else if (strcmp(key, "data") == 0) {
-                printf("  Data: %s\n", value);
+                // printf("  Data: %s\n", value);
                 // 为data分配新内存并拷贝内容
                 if (ctx->data) {
                     free(ctx->data);

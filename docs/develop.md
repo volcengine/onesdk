@@ -145,5 +145,6 @@ You can customize the build by passing CMake options to `build.sh`:
 
 
 ### Volocano Engine Product Links
-[IOT Platform](https://www.volcengine.com/docs/6893/1455924)
-[AI Gateway](https://www.volcengine.com/docs/6893/1263412)
+
+- [IOT Platform](https://www.volcengine.com/docs/6893/1455924)
+- [AI Gateway](https://www.volcengine.com/docs/6893/1263412)

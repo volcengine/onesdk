@@ -53,7 +53,10 @@ drwxr-xr-x@ 11 bytedance  wheel   352  6 25 19:45 main
 
 **启用ESP环境变量**
 
-[第四步：设置环境变量](https://docs.espressif.com/projects/esp-idf/zh_CN/stable/esp32/get-started/linux-macos-setup.html#get-started-set-up-env)
+```bash
+cd examples/onesdk_esp32
+```
+然后 [第四步：设置环境变量](https://docs.espressif.com/projects/esp-idf/zh_CN/stable/esp32/get-started/linux-macos-setup.html#get-started-set-up-env)
 
 **配置编译目标为 ESP32S3**
 
