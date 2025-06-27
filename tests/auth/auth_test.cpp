@@ -25,10 +25,10 @@ extern "C"
 #define SAMPLE_HTTP_HOST "iot-cn-shanghai.iot.volces.com"
 #define SAMPLE_INSTANCE_ID "636cf76df3c90c196d13bf7a"
 #define SAMPLE_MQTT_HOST "636cf76df3c90c196d13bf7a.cn-shanghai.iot.volces.com"
-#define SAMPLE_DEVICE_NAME "zhangbo-test-003"
-#define SAMPLE_DEVICE_SECRET "d9cad6c4a44c2889bc690996"
-#define SAMPLE_PRODUCT_KEY "677ccb2de6430bbd157fbe55"
-#define SAMPLE_PRODUCT_SECRET "caf4931613298d6de43db5a5"
+#define SAMPLE_DEVICE_NAME "fake-device-name"
+#define SAMPLE_DEVICE_SECRET "fake-device-secret"
+#define SAMPLE_PRODUCT_KEY "fake-product-key"
+#define SAMPLE_PRODUCT_SECRET "fake-product-secret"
 
 TEST_GROUP(auth) {
     iot_basic_ctx_t *basic_ctx;
