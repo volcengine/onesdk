@@ -45,7 +45,7 @@ TEST_GROUP(llm_config) {
         basic_ctx->config->product_key =cpputest_strdup(SAMPLE_PRODUCT_KEY);
         basic_ctx->config->product_secret =cpputest_strdup(SAMPLE_PRODUCT_SECRET);
         basic_ctx->config->device_name =cpputest_strdup(SAMPLE_DEVICE_NAME);
-        basic_ctx->config->device_secret =cpputest_strdup("98cb52e94e437ee407dbed37"); // P1
+        basic_ctx->config->device_secret =cpputest_strdup("fake-device-secret"); // P1
         basic_ctx->config->auth_type = ONESDK_AUTH_DYNAMIC_NO_PRE_REGISTERED;
     }
 
