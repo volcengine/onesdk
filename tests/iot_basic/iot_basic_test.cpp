@@ -29,7 +29,7 @@ extern "C"
 #define SAMPLE_INSTANCE_ID "6784dcf26c8dc8689881e67d"
 #define SAMPLE_MQTT_HOST "6784dcf26c8dc8689881e67d.cn-shanghai.iot.volces.com"
 #define SAMPLE_DEVICE_NAME "P1-9"
-#define SAMPLE_DEVICE_SECRET "98cb52e94e437ee407dbed37"
+#define SAMPLE_DEVICE_SECRET "fake-device-secret"
 #define SAMPLE_PRODUCT_KEY "fake-product-key"
 #define SAMPLE_PRODUCT_SECRET "fake-product-secret"
 

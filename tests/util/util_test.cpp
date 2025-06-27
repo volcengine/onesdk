@@ -43,7 +43,7 @@ TEST_GROUP(util) {
 // }
 
 TEST(util, test_aes_decode) {
-    char *device_secret = "98cb52e94e437ee407dbed37";
+    char *device_secret = "fake-device-secret";
     char *encrypted = "lk55/tznQECKe/IzNup8LN3uf4m6c25d7VHFVnhezqEBIcRy+2PoAw+cUilpMyu9wTcwsUfqe8e/4RMriz/L6w==";
     const char *got = aes_decode(alloc, device_secret, encrypted, false);
     // const char *want_str = "test-abc";

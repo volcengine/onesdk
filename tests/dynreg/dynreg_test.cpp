@@ -48,9 +48,6 @@ TEST_GROUP(dynreg) {
         pconfig->product_key =cpputest_strdup(SAMPLE_PRODUCT_KEY);
         pconfig->product_secret =cpputest_strdup(SAMPLE_PRODUCT_SECRET);
         pconfig->device_name =cpputest_strdup(SAMPLE_DEVICE_NAME);
-        // device_ctx->device_name = "sdk-llm-config-test";
-        // device_ctx->device_secret =cpputest_strdup("98cb52e94e437ee407dbed37"); // P1
-        // device_ctx->device_secret = cpputest_strdup("3486b6f47e9216c47b7a6320"); // sdk-test
         pconfig->verify_ssl= false;
         pconfig->auth_type = ONESDK_AUTH_DYNAMIC_NO_PRE_REGISTERED;
     }
@@ -90,6 +87,6 @@ TEST(dynreg, test_dynreg) {
 
     int ret = dynamic_register(device_ctx);
     CHECK(ret == 0);
-    STRCMP_EQUAL("98cb52e94e437ee407dbed37", device_ctx->config->device_secret);
+    STRCMP_EQUAL("fake-device-secret", device_ctx->config->device_secret);
     mock("dynreg").checkExpectations();
 }
