@@ -54,7 +54,7 @@ TEST_GROUP(iot_basic) {
 
 http_response_t *http_request(http_request_context_t *http_context) {
     mock("iot_basic").actualCall("http_request");
-    char *mock_body = "{\"ResponseMetadata\":{\"Action\":\"GetLLMConfig\",\"Version\":\"2021-12-14\"},\"Result\":{\"URL\":\"http://llm-gateway.vei.gtm.volcdns.com:30506\",\"APIKey\":\"w/LdsxG/MgSAhVGD3WmPng==\"}}\r\n";
+    char *mock_body = "{\"ResponseMetadata\":{\"Action\":\"GetLLMConfig\",\"Version\":\"2021-12-14\"},\"Result\":{\"URL\":\"http://llm-gateway.vei.gtm.volcdns.com:30506\",\"APIKey\":\"fake-api-key\"}}\r\n";
     http_response_t *mock_response = (http_response_t *)cpputest_malloc(sizeof(http_response_t));
     memset(mock_response, 0, sizeof(http_response_t));
     mock_response->body_size = strlen(mock_body)+1;
