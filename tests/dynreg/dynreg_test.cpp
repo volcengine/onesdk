@@ -29,8 +29,8 @@ extern "C"
 #define SAMPLE_MQTT_HOST "6784dcf26c8dc8689881e67d.cn-shanghai.iot.volces.com"
 #define SAMPLE_DEVICE_NAME "P1-9"
 #define SAMPLE_DEVICE_SECRET ""
-#define SAMPLE_PRODUCT_KEY "6788bd810f9bad3f8ef674fa"
-#define SAMPLE_PRODUCT_SECRET "84d2917973026d49be374ec4"
+#define SAMPLE_PRODUCT_KEY "fake-product-key"
+#define SAMPLE_PRODUCT_SECRET "fake-product-secret"
 
 TEST_GROUP(dynreg) {
     iot_basic_ctx_t *device_ctx;  // 改为指针类型

@@ -1,0 +1,203 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Linux Build and Test
+  linux-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        build_type: [debug, release]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libssl-dev
+
+    - name: Setup ${{ matrix.compiler }}
+      if: matrix.compiler == 'clang'
+      run: |
+        sudo apt-get install -y clang
+
+    - name: Configure and build
+      run: |
+        export CC=${{ matrix.compiler }}
+        export CXX=${{ matrix.compiler }}++
+        ./build.sh -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DONESDK_WITH_TEST=ON
+
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
+    - name: Build examples
+      run: |
+        ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
+
+  # macOS Build and Test
+  macos-build:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        brew install cmake openssl
+
+    - name: Configure and build
+      run: |
+        ./build.sh -DCMAKE_BUILD_TYPE=debug -DONESDK_WITH_TEST=ON
+
+    - name: Run tests
+      run: |
+        cd build
+        ctest --output-on-failure
+
+    - name: Build examples
+      run: |
+        ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
+
+  # Windows Build
+  windows-build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        choco install cmake
+        choco install mingw
+
+    - name: Configure and build
+      run: |
+        ./build.sh -DCMAKE_BUILD_TYPE=debug -DONESDK_WITH_EXAMPLE=ON
+
+  # ESP32 Build (using ESP-IDF)
+  esp32-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup ESP-IDF
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.1.2
+        target: esp32s3
+
+    - name: Build ESP32 examples
+      run: |
+        cd examples/onesdk_esp32
+        idf.py build
+
+  # Code Quality Checks
+  code-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libssl-dev cppcheck
+
+    - name: Static analysis
+      run: |
+        cppcheck --enable=all --suppress=missingIncludeSystem src/ include/ platform/
+
+    - name: Build with strict mode
+      run: |
+        ./build.sh -DONESDK_WITH_STRICT_MODE=ON -DONESDK_WITH_TEST=ON
+
+  # Documentation Build
+  docs-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libssl-dev
+
+    - name: Build with documentation
+      run: |
+        ./build.sh -DONESDK_WITH_EXAMPLE=ON
+
+    - name: Check documentation files
+      run: |
+        test -f README.md
+        test -f README.zh_CN.md
+        test -f docs/develop.md
+
+  # Release Build
+  release-build:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libssl-dev
+
+    - name: Build release version
+      run: |
+        ./build.sh -DCMAKE_BUILD_TYPE=release -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
+
+    - name: Extract source files
+      run: |
+        ./build.sh -DONESDK_EXTRACT_SRC=ON
+
+    - name: Create release artifacts
+      run: |
+        mkdir -p release
+        cp -r build/output release/
+        cp -r build/bin release/
+        cp -r include release/
+        tar -czf onesdk-release.tar.gz release/
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: onesdk-release
+        path: onesdk-release.tar.gz 
