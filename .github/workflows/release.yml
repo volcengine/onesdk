@@ -1,0 +1,89 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential cmake libssl-dev
+
+    - name: Get version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Build release version
+      run: |
+        ./build.sh -DCMAKE_BUILD_TYPE=release -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
+
+    - name: Extract source files
+      run: |
+        ./build.sh -DONESDK_EXTRACT_SRC=ON
+
+    - name: Create release package
+      run: |
+        mkdir -p release
+        cp -r build/output release/
+        cp -r build/bin release/
+        cp -r include release/
+        cp README.md release/
+        cp README.zh_CN.md release/
+        cp docs/develop.md release/
+        tar -czf onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz release/
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: OneSDK ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## OneSDK ${{ steps.get_version.outputs.VERSION }}
+          
+          ### What's New
+          - AI functionality improvements
+          - IoT device management enhancements
+          - Bug fixes and stability improvements
+          
+          ### Downloads
+          - Source code and examples
+          - Pre-built binaries for multiple platforms
+          - Documentation and development guides
+          
+          ### Supported Platforms
+          - Linux (amd64/arm64)
+          - macOS (Intel/Apple Silicon)
+          - Windows
+          - ESP32 (ESP-IDF)
+          
+          ### Quick Start
+          ```bash
+          git clone https://github.com/your-repo/onesdk.git
+          cd onesdk
+          ./build.sh
+          ```
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz
+        asset_name: onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz
+        asset_content_type: application/gzip 
