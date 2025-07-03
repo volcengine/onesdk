@@ -30,17 +30,21 @@ bash build.sh -DONESDK_EXTRACT_SRC=ON
 bash scripts/copy_onesdk_src.sh
 
 # 确保目录下存在相关文件内容
-ls -l examples/onesdk_esp32_audio
-total 48
--rw-r--r--@  1 bytedance  wheel  2385  6 25 19:45 CMakeLists.txt
-drwxr-xr-x@  3 bytedance  wheel    96  6 25 19:50 components
--rw-r--r--@  1 bytedance  wheel  1861  6 25 19:45 libwebsockes-diff.diff
-drwxr-xr-x@ 32 bytedance  wheel  1024  6 25 19:50 libwebsockets
-drwxr-xr-x@ 11 bytedance  wheel   352  6 25 19:45 main
--rw-r--r--@  1 bytedance  wheel   311  6 25 19:45 partitions_example.csv
--rw-r--r--@  1 bytedance  wheel  2424  6 25 19:45 README.md
--rw-r--r--@  1 bytedance  wheel   714  6 25 19:45 sdkconfig.defaults
--rw-r--r--@  1 bytedance  wheel   709  6 25 19:45 sdkconfig.defaults.esp32s3
+ls -l examples/onesdk_esp32_audio 
+total 336
+-rw-r--r--@  1 bytedance  staff   1641 Jun 25 16:53 CMakeLists.txt
+drwxr-xr-x@  4 bytedance  staff    128 Jun 26 21:13 components
+-rw-r--r--@  1 bytedance  staff   1438 Jun 26 21:09 dependencies.lock
+drwxr-xr-x@  3 bytedance  staff     96 Jun 25 16:53 images
+lrwxr-xr-x@  1 bytedance  staff     33 Jun 25 16:53 libwebsockets -> ../../external_libs/libwebsockets
+drwxr-xr-x@ 12 bytedance  staff    384 Jul  2 19:50 main
+drwxr-xr-x@  6 bytedance  staff    192 Jun 26 21:09 managed_components
+-rw-r--r--@  1 bytedance  staff    240 Jun 27 16:39 partitions.csv
+-rw-r--r--@  1 bytedance  staff   4020 Jul  2 19:54 README.md
+-rw-r--r--@  1 bytedance  staff  80639 Jun 30 15:39 sdkconfig
+-rw-r--r--@  1 bytedance  staff   2707 Jun 25 16:53 sdkconfig.defaults
+-rw-r--r--@  1 bytedance  staff  66043 Jun 26 21:22 sdkconfig.old
+drwxr-xr-x@  3 bytedance  staff     96 Jun 25 16:53 spiffs
 
 ```
 > [!IMPORTANT]
@@ -71,7 +75,6 @@ idf.py menuconfig
 
 分别配置如下选项：
 - `Component config` → `ESP System Settings` → `Main task stack size` → 输入 `35840`
-- `Partition Table` → `Custom partition table CSV` → 选择 `AtomS3R CAM/M12 + Echo Base`
 - `Partition Table` → `Custom partition CSV file` → 删除原有内容，输入 `partitions.csv`
 - `Serial flasher config` → `Flash size` → 选择 `8 MB`
 - `Component config` → `ESP PSRAM` → `Support for external, SPI-connected RAM` → `SPI RAM config` → `Mode (QUAD/OCT)` → `Octal Mode PSRAM`
@@ -84,7 +87,7 @@ idf.py menuconfig
 按 `S` 保存，按 `Q` 退出。
 
 **设置联网**
-修改目录下`config.h"`文件，设置`CONFIG_WIFI_SSID`和`CONFIG_WIFI_PASSWORD`
+修改目录下`main/config.h`文件，设置`CONFIG_WIFI_SSID`和`CONFIG_WIFI_PASSWORD`
 **编译**
 
 ```bash
