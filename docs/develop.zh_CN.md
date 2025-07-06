@@ -116,7 +116,7 @@ cd onesdk
 | `ONESDK_ENABLE_AI_REALTIME` | `ON`    | 启用实时 AI 功能（如 WebSocket 音频流）。      |
 | `ONESDK_ENABLE_IOT`         | `ON`    | 启用 IoT 功能（MQTT、OTA、物模型）。         |
 | `ONESDK_WITH_EXAMPLE`       | `ON`    | 构建示例程序。                                 |
-| `ONESDK_WITH_TEST`          | `ON`    | 构建单元测试。                                 |
+| `ONESDK_WITH_TEST`          | `OFF`   | 构建单元测试。                                 |
 | `ONESDK_WITH_SHARED`        | `ON`    | 构建动态链接库。                               |
 | `ONESDK_WITH_STATIC`        | `ON`    | 构建静态链接库。                               |
 | `ONESDK_WITH_STRICT_MODE`   | `OFF`   | 启用编译器的地址消毒器（Address Sanitizer）。    |

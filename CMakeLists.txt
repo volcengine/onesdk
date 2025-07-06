@@ -15,7 +15,7 @@ option(ONESDK_ENABLE_IOT "Enable IoT functionality" ON)
 
 # Define compilation options
 option(ONESDK_WITH_EXAMPLE "Build onesdk examples" ON)
-option(ONESDK_WITH_TEST "Build onesdk unit tests" ON)
+option(ONESDK_WITH_TEST "Build onesdk unit tests" OFF)
 option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
 option(ONESDK_WITH_STRICT_MODE "Build onesdk with ADDRESS SANTITIZE mode" OFF)
@@ -272,7 +272,7 @@ if (ONESDK_WITH_TEST AND NOT APPLE)
 	include(FetchContent)
 	FetchContent_Declare(
 		CppUTest
-		GIT_REPOSITORY https://github.com/cpptest/cpptest.git
+		GIT_REPOSITORY https://github.com/cpputest/cpputest.git
 		GIT_TAG        master # or use release tag, eg. v4.0
 		# FIND_PACKAGE_ARGS # Recent CMake versions can integrate FetchContent with find_package
 		# https://cmake.org/cmake/help/latest/module/FetchContent.html#integrating-with-find_package
