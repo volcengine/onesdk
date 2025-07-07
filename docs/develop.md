@@ -116,7 +116,7 @@ You can customize the build by passing CMake options to `build.sh`:
 | `ONESDK_ENABLE_AI_REALTIME` | `ON`    | Enable real-time AI features (e.g., WebSocket audio).    |
 | `ONESDK_ENABLE_IOT`         | `ON`    | Enable IoT features (MQTT, OTA, Thing Model).            |
 | `ONESDK_WITH_EXAMPLE`       | `ON`    | Build example applications.                              |
-| `ONESDK_WITH_TEST`          | `ON`    | Build unit tests.                                        |
+| `ONESDK_WITH_TEST`          | `OFF`   | Build unit tests.                                        |
 | `ONESDK_WITH_SHARED`        | `ON`    | Build shared libraries.                                  |
 | `ONESDK_WITH_STATIC`        | `ON`    | Build static libraries.                                  |
 | `ONESDK_WITH_STRICT_MODE`   | `OFF`   | Enable compiler address sanitizer.                       |
