@@ -28,7 +28,9 @@ typedef struct {
 } iot_tm_msg_shadow_post_t;
 
 typedef struct {
-
+    char* msg_id;
+    int64_t version;
+    char* reply_json_str;
 } iot_tm_recv_shadow_post_reply_t;
 
 

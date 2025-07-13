@@ -165,13 +165,21 @@ void* mcp_receive_thread(void *arg){
     }
     mcp_context_t *ctx = (mcp_context_t *)arg;
     block_receive_from_sse_server(ctx);
+    return NULL;
 }
 
+#ifdef _WIN32
+HANDLE mcp_receiver_run(mcp_context_t *ctx){
+    HANDLE tid = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)mcp_receive_thread, (void*)ctx, 0, NULL);
+    return tid;
+}
+#else
 pthread_t mcp_receiver_run(mcp_context_t *ctx){
     pthread_t tid;
     pthread_create(&tid, NULL, mcp_receive_thread, (void*)ctx);
     return tid;
 }
+#endif
 
 
 
@@ -220,7 +228,11 @@ int main(){
     //启动sse接收线程
     mcp_context_t *ctx = mcp_ctx_new();
     mcp_receiver_init(ctx,SAMPLE_MCP_SERVER_IP, SAMPLE_MCP_SERVER_PORT);//mcp server 地址
+#ifdef _WIN32
+    HANDLE tid = mcp_receiver_run(ctx);
+#else
     pthread_t tid = mcp_receiver_run(ctx);
+#endif
 
     tools_list_t *tools_list = mcp_tools_list(ctx);
     if(!tools_list){
@@ -324,7 +336,12 @@ failed:
         free(config);
     }
     http_close(ctx->http_ctx);;
+#ifdef _WIN32
+    WaitForSingleObject(tid, INFINITE);
+    CloseHandle(tid);
+#else
     pthread_join(tid, NULL);
+#endif
     http_ctx_release(ctx->http_ctx);
     mcp_ctx_free(ctx);
     return 0;

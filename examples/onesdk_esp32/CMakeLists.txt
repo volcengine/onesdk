@@ -1,6 +1,6 @@
 # The following five lines of boilerplate have to be in your project's
 # CMakeLists in this exact order for cmake to work correctly
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 set(ONESDK_ENABLE_AI ON)
 option(ONESDK_ENABLE_AI "Enable AI" ON)
 set(ONESDK_ENABLE_AI_REALTIME OFF)
@@ -19,11 +19,32 @@ if (ESP_PLATFORM)
 	endif()
 	include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 	project(onesdk_esp32)
-	enable_testing()
+	
+# Platform detection
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(BUILD_PLATFORM "windows")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(BUILD_PLATFORM "macos")
+else()
+    set(BUILD_PLATFORM "linux")
+endif()
+
+enable_testing()
+
+# Platform-specific libraries
+if(BUILD_PLATFORM STREQUAL "windows")
+    set(PLATFORM_LIBS ws2_32 crypt32 iphlpapi)
+else()
+    set(PLATFORM_LIBS "")
+endif()
+
 
 	# target_link_libraries(onesdk PRIVATE libwebsockets)
+            ${PLATFORM_LIBS})
 	target_link_libraries(onesdk_esp32.elf PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/esp-idf/onesdk/libonesdk.a")
+            ${PLATFORM_LIBS})
 	target_link_libraries(onesdk_esp32.elf PUBLIC websockets)
+            ${PLATFORM_LIBS})
 	# option(LWS_WITH_DRIVERS "With generic drivers for gpio, i2c, display etc" ON)
 	set(LWS_WITH_MBEDTLS ON)
 	option(LWS_WITH_MBEDTLS "With mbedtls" ON)

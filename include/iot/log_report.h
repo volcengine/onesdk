@@ -23,7 +23,7 @@ typedef struct log_handler {
     iot_mqtt_ctx_t *mqtt_handle;
     struct aws_allocator *allocator;
     bool log_report_switch;
-    pthread_mutex_t lock;
+    platform_mutex_t lock;
     enum onesdk_log_level lowest_level; // 最新上报level
     // struct aws_hash_table* stream_id_config_map;
     bool log_report_config_topic_ready;

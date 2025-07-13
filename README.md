@@ -52,11 +52,31 @@ Supported Platforms:
 - RTOS (FreeRTOS/uc-OS2)
 - Linux (amd64/arm64)
 - macOS (Apple Silicon/Intel)
-- Windows
+- Windows (x64/x86)
 
 ### Installation, Compilation, and Execution
 
+#### Linux/macOS
 Refer to the [Development Guide](docs/develop.md) for instructions on building, compiling, and running.
+
+#### Windows
+Refer to the [Windows Development Guide](docs/develop_windows.md) for detailed Windows-specific setup and build instructions.
+
+**Quick Windows Build:**
+```cmd
+# Clone the repository
+git clone --recursive https://github.com/volcengine/onesdk.git
+cd onesdk
+
+# Build using Visual Studio (recommended)
+build.bat
+
+# Or build using MinGW-w64
+mkdir build
+cd build
+cmake -G "MinGW Makefiles" ..
+mingw32-make
+```
 
 ## Contribution
 
@@ -76,3 +96,26 @@ Please do **not** create a public GitHub issue.
 ## License
 
 This project is licensed under the [Apache-2.0 License](LICENSE.txt).
+
+# Windows 跨平台适配说明
+
+- 本项目已适配 Windows 平台，所有 POSIX 相关接口（如 `gettimeofday`、`timezone`、`strtok_r`、`localtime_r`、`gmtime_r`、原子操作等）均已在 `include/platform_compat.h` 中做了兼容实现。
+- 示例代码中的线程相关接口已兼容 Windows 线程 API。
+- 默认关闭示例编译（`ONESDK_WITH_EXAMPLE=OFF`），如需编译请确保 OpenSSL 已正确安装并配置环境变量。
+- 主库编译不依赖 OpenSSL，示例如需 TLS/SSL 功能请手动安装 OpenSSL。
+
+## 依赖说明
+- Windows 下无需 `sys/time.h`、`pthread.h`，相关功能已在 `platform_compat.h` 里做了兼容。
+- 主库不再强制依赖 OpenSSL，示例如需 TLS/SSL 功能需自行安装 OpenSSL 并配置环境变量 `OPENSSL_ROOT_DIR`。
+
+## 编译环境
+- 推荐使用 Visual Studio 2019/2022 + CMake 3.10+。
+- 需要安装 Windows SDK。
+- 如需编译示例，建议安装 OpenSSL。
+
+## 常见问题
+- 遇到 `sys/time.h`、`pthread.h`、`openssl/ssl.h` 找不到时，请确认已正确配置依赖或关闭相关功能。
+- 如何切换/关闭 TLS 支持（CMake 选项 `LWS_WITH_TLS`）。
+- 如何在 Windows 下配置 OpenSSL 环境变量。
+
+---

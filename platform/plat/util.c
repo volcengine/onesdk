@@ -14,7 +14,11 @@
 
 #include <time.h>
 #include <stdlib.h>
+#ifdef _WIN32
+#include "platform_compat.h"
+#else
 #include <sys/time.h>
+#endif
 #include "util.h"
 
 

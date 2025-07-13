@@ -14,7 +14,6 @@
 
 #define ENABLE_AI_REALTIME
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>

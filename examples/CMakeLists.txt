@@ -17,6 +17,16 @@
 cmake_minimum_required(VERSION 3.10)
 project(onesdkSamples C)
 
+
+# Platform detection
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(BUILD_PLATFORM "windows")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(BUILD_PLATFORM "macos")
+else()
+    set(BUILD_PLATFORM "linux")
+endif()
+
 set(CMAKE_C_STANDARD 11)
 
 # set(LOG_DIR "./log")

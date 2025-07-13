@@ -317,10 +317,16 @@ static struct aws_string *_iot_mqtt_get_username(iot_basic_config_t *basic_confi
     aws_common_library_init(alloc);
     
     int length = strlen(basic_config->product_key) + strlen(basic_config->device_name) + 10;
-    char clientIdStr[length];
+    char *clientIdStr = malloc(length);
+    if (!clientIdStr) {
+        lwsl_err("malloc failed for clientIdStr\n");
+        return NULL;
+    }
     sprintf(clientIdStr, "%s|%s", basic_config->product_key, basic_config->device_name);
     
-    return aws_string_new_from_c_str(alloc, clientIdStr);
+    struct aws_string *result = aws_string_new_from_c_str(alloc, clientIdStr);
+    free(clientIdStr);
+    return result;
 }
 
 static struct aws_string *_iot_mqtt_get_password(iot_basic_config_t *basic_config) {

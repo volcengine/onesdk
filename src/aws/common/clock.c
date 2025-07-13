@@ -2,8 +2,13 @@
 #include "common.h"
 #include "math.h"
 
+#ifdef _WIN32
+#include <libwebsockets.h>
+#include "platform_compat.h"
+#else
 #include <time.h>
 #include <sys/time.h>
+#endif
 
 static const uint64_t NS_PER_SEC = 1000000000;
 

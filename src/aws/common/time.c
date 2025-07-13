@@ -1,4 +1,5 @@
 #include "time.h"
+#include "platform_compat.h"
 
 time_t aws_timegm(struct tm *const t) {
    return mktime(t);

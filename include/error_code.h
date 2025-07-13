@@ -42,6 +42,7 @@
 #define VOLC_ERR_CONNECT        -2  // 连接失败
 #define VOLC_ERR_SEND           -3  // 发送失败
 #define VOLC_ERR_MALLOC         -4  // 内存分配失败
+#define VOLC_ERR_MALLOC_FAILED  -4  // 内存分配失败 (别名)
 #define VOLC_ERR_INVALID_PARAM  -5  // 非法参数
 #define VOLC_ERR_NULL_POINTER   -6  // 空指针
 #define VOLC_ERR_FILE_OPEN      -7  // 文件打开失败

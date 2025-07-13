@@ -42,6 +42,7 @@
 void* keepalive_thread(void *arg) {
     onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
     onesdk_iot_keepalive(ctx);
+    return NULL;
 }
 
 void test_aiot_ota_download_complete_t(void *handler,
@@ -181,8 +182,17 @@ int main() {
         return 1;
     }
 
+#ifdef _WIN32
+    // Windows 下使用 Windows 线程 API
+    HANDLE keep_alive_thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)keepalive_thread, ctx, 0, NULL);
+    if (keep_alive_thread == NULL) {
+        printf("Failed to create keep alive thread\n");
+        return 1;
+    }
+#else
     pthread_t keep_alive_thread;
     pthread_create(&keep_alive_thread, NULL, keepalive_thread, ctx);
+#endif
 
     ret = onesdk_iot_tm_init(ctx);
     if (ret) {

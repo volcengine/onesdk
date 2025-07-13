@@ -20,6 +20,7 @@
 #include "protocols/http.h"
 #include "protocols/private_lws_http_client.h"
 #include "error_code.h"
+#include "platform_compat.h"
 
 static int interrupted, bad = 1, status, conmon = 1, close_after_start = 0;
 static int log_level = LLL_USER | LLL_ERR | LLL_WARN;
@@ -294,16 +295,21 @@ callback_onesdk_http(struct lws *wsi, enum lws_callback_reasons reason,
 		}
 		const char *json_data = http_ctx->client_data->post_buf;
 		int body_len = strlen(json_data);
-		unsigned char buf_body[LWS_PRE + strlen(json_data)];
+		unsigned char *buf_body = malloc(LWS_PRE + body_len);
+		if (!buf_body) {
+			lwsl_err("malloc failed for buf_body\n");
+			return -1;
+		}
 		unsigned char *p_body = &buf_body[LWS_PRE];
 
-		memcpy(p_body, json_data, strlen(json_data));
+		memcpy(p_body, json_data, body_len);
 		lws_write(wsi, p_body, body_len, LWS_WRITE_HTTP_FINAL);
 		lwsl_debug("LWS_CALLBACK_CLIENT_HTTP_WRITEABLE: wrote body length: %d\n", body_len);
 		//fprintf(stderr, "LWS_CALLBACK_CLIENT_HTTP_WRITEABLE: wrote body bytes: %s\n", json_data);
 		// 结束 HTTP 请求,如果还有，请设置1
 		lws_client_http_body_pending(wsi, 0);
 		lwsl_debug("LWS_CALLBACK_CLIENT_HTTP_WRITEABLE: end\n");
+		free(buf_body);
 
 		break;
 	}
@@ -322,41 +328,61 @@ callback_onesdk_http(struct lws *wsi, enum lws_callback_reasons reason,
 		// header = lws_token_to_string(WSI_TOKEN_HTTP_CONTENT_TYPE);
 		header_len = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_CONTENT_TYPE);
 		if (header_len > 0) {
-			char content_type[header_len + 1];
+			char *content_type = malloc(header_len + 1);
+			if (!content_type) {
+				lwsl_err("malloc failed for content_type\n");
+				return -1;
+			}
 			lws_hdr_copy(wsi, content_type, header_len + 1, WSI_TOKEN_HTTP_CONTENT_TYPE);
 			lwsl_debug("Content-Type: %s\n", content_type);
 			if (strncmp(content_type, "text/event-stream", strlen("text/event-stream")) == 0) {
 				http_ctx->client_data->is_sse = true;
 			}
+			free(content_type);
 		}
 		// 读取特定的 HTTP 响应头，例如 "Content-Length"
 		// header = lws_token_to_string(WSI_TOKEN_HTTP_CONTENT_LENGTH);
 		header_len = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_CONTENT_LENGTH);
 		if (header_len > 0) {
-			char content_length[header_len + 1];
+			char *content_length = malloc(header_len + 1);
+			if (!content_length) {
+				lwsl_err("malloc failed for content_length\n");
+				return -1;
+			}
 			lws_hdr_copy(wsi, content_length, header_len + 1, WSI_TOKEN_HTTP_CONTENT_LENGTH);
 			lwsl_debug("Content-Length: %s\n", content_length);
 			// http_ctx->response->body_size = atoi(content_length);
+			free(content_length);
 		}
 		// 读取特定的 HTTP 响应头，例如 "Transfer-Encoding"
 		// header = lws_token_to_string(WSI_TOKEN_HTTP_TRANSFER_ENCODING);
 		header_len = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_TRANSFER_ENCODING);
 		if (header_len > 0) {
-			char transfer_encoding[header_len + 1];
+			char *transfer_encoding = malloc(header_len + 1);
+			if (!transfer_encoding) {
+				lwsl_err("malloc failed for transfer_encoding\n");
+				return -1;
+			}
 			lws_hdr_copy(wsi, transfer_encoding, header_len + 1, WSI_TOKEN_HTTP_TRANSFER_ENCODING);
 			lwsl_debug("Transfer-Encoding: %s\n", transfer_encoding);
 			if (strcmp(transfer_encoding, "chunked") == 0) {
 				// chunked data
 				http_ctx->client_data->is_chunked = true;
 			}
+			free(transfer_encoding);
 		}
 		// 读取特定的 HTTP 响应头，例如 "Range" 做断点续传
 		// header = lws_token_to_string(WSI_TOKEN_HTTP_RANGE);
 		header_len = lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_RANGE);
 		if (header_len > 0) {
-			char range[header_len + 1];
+			char *range = malloc(header_len + 1);
+			if (!range) {
+				lwsl_err("malloc failed for range\n");
+				return -1;
+			}
 			lws_hdr_copy(wsi, range, header_len + 1, WSI_TOKEN_HTTP_RANGE);
 			lwsl_debug("Range: %s\n", range);
+			free(range);
 		}
 		// TODO, add logic to parse more http response headers
 		break;
