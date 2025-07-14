@@ -19,7 +19,9 @@ fi
 
 # 使用绝对路径进行拷贝操作
 for example_dir in "onesdk_esp32" "onesdk_esp32_audio"; do
-    cp -rv "$ONESDK_ROOT_DIR/build/output/" "$ONESDK_ROOT_DIR/examples/${example_dir}/"
+    mkdir -p "$ONESDK_ROOT_DIR/examples/${example_dir}/components/onesdk"
+
+    cp -rv "$ONESDK_ROOT_DIR/build/output/components" "$ONESDK_ROOT_DIR/examples/${example_dir}/"
     cp -v "$ONESDK_ROOT_DIR/components_onesdk.txt" "$ONESDK_ROOT_DIR/examples/${example_dir}/components/onesdk/CMakeLists.txt"
     # cp -v "$ONESDK_ROOT_DIR/libwebsockets_cmakelists.txt" "$ONESDK_ROOT_DIR/examples/${example_dir}/libwebsockets/CMakeLists.txt"
 done
