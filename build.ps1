@@ -27,6 +27,27 @@ try {
     $cmakeVersion = cmake --version 2>$null | Select-String "cmake version" | ForEach-Object { $_.ToString().Split()[2] }
     if ($cmakeVersion) {
         Write-Host "CMake version: $cmakeVersion" -ForegroundColor Green
+        
+        # Check CMake version compatibility
+        $versionParts = $cmakeVersion.Split('.')
+        $majorVersion = [int]$versionParts[0]
+        $minorVersion = [int]$versionParts[1]
+        
+        if ($majorVersion -eq 3 -and $minorVersion -ge 10) {
+            Write-Host "CMake version is compatible (3.x)" -ForegroundColor Green
+        } elseif ($majorVersion -gt 3) {
+            Write-Host "Warning: CMake version $cmakeVersion is higher than 3.x" -ForegroundColor Yellow
+            Write-Host "This may cause compatibility issues with cJSON" -ForegroundColor Yellow
+            Write-Host "Consider using CMake 3.26.x for best compatibility" -ForegroundColor Yellow
+            
+            $response = Read-Host "Continue anyway? (y/N)"
+            if ($response -notmatch "^[Yy]$") {
+                exit 1
+            }
+        } else {
+            Write-Host "Error: CMake version $cmakeVersion is too old. Minimum required: 3.10" -ForegroundColor Red
+            exit 1
+        }
     } else {
         Write-Host "CMake not found or version could not be determined" -ForegroundColor Red
         exit 1

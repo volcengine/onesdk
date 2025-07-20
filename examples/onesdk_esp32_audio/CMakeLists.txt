@@ -1,6 +1,6 @@
 # The following lines of boilerplate have to be in your project's
 # CMakeLists in this exact order for cmake to work correctly
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.5)
 option(ONESDK_ENABLE_AI "Enable AI features" OFF)
 set(ONESDK_ENABLE_AI OFF)
 option(ONESDK_ENABLE_AI_REALTIME "Enable AI real-time features" ON)
@@ -11,31 +11,10 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 
 project(volc_onesdk_esp32)
 
-
-# Platform detection
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(BUILD_PLATFORM "windows")
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(BUILD_PLATFORM "macos")
-else()
-    set(BUILD_PLATFORM "linux")
-endif()
-
-# Platform-specific libraries
-if(BUILD_PLATFORM STREQUAL "windows")
-    set(PLATFORM_LIBS ws2_32 crypt32 iphlpapi)
-else()
-    set(PLATFORM_LIBS "")
-endif()
-
-
 # target_link_libraries(onesdk PRIVATE libwebsockets)
-            ${PLATFORM_LIBS})
 target_link_libraries(volc_onesdk_esp32.elf PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/esp-idf/onesdk/libonesdk.a")
-            ${PLATFORM_LIBS})
 target_link_libraries(volc_onesdk_esp32.elf PUBLIC websockets)
 
-            ${PLATFORM_LIBS})
 set(LWS_WITH_MBEDTLS ON)
 option(LWS_WITH_MBEDTLS "With mbedtls" ON)
 set(LWS_WITH_DRIVERS OFF)

@@ -1,4 +1,5 @@
 # CMake minimum version requirement
+# Using 3.10 for cJSON compatibility - avoid CMake 4.x which may cause issues
 cmake_minimum_required(VERSION 3.10)
 
 project(onesdk VERSION 0.1)
@@ -20,7 +21,7 @@ option(ONESDK_ENABLE_AI_REALTIME "Enable real-time AI functionality" ON)
 option(ONESDK_ENABLE_IOT "Enable IoT functionality" ON)
 
 # Define compilation options
-option(ONESDK_WITH_EXAMPLE "Build onesdk examples" OFF)
+option(ONESDK_WITH_EXAMPLE "Build onesdk examples" ON)
 option(ONESDK_WITH_TEST "Build onesdk unit tests" OFF)
 option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
@@ -34,7 +35,7 @@ configure_file(
 
 # Set libwebsockets related configuration
 
-option(LWS_WITH_TLS "Build with TLS support" OFF)
+option(LWS_WITH_TLS "Build with TLS support" ON)
 option(LWS_WITH_MINIMAL_EXAMPLES "Build with examples" OFF)
 if(ONESDK_ENABLE_IOT)
 	option(LWS_ROLE_MQTT "Build with support for MQTT client" ON)
@@ -119,13 +120,20 @@ include_directories(
 		${PROJECT_BINARY_DIR}/include
 )
 
-# Windows specific include directories
+# Platform specific include directories
 if(BUILD_PLATFORM STREQUAL "windows")
     # Add Windows SDK paths if available
     if(DEFINED ENV{WINDOWS_SDK_PATH})
         include_directories("$ENV{WINDOWS_SDK_PATH}/Include")
     endif()
     # Add OpenSSL paths for Windows
+	message(STATUS "OPENSSL_ROOT_DIR for onesdk: $ENV{OPENSSL_ROOT_DIR}")
+	# include_directories("C:/Program Files/OpenSSL-Win64/include")
+    if(DEFINED ENV{OPENSSL_ROOT_DIR})
+        include_directories("$ENV{OPENSSL_ROOT_DIR}/include")
+    endif()
+elseif(BUILD_PLATFORM STREQUAL "macos")
+    # Add OpenSSL paths for macOS
     if(DEFINED ENV{OPENSSL_ROOT_DIR})
         include_directories("$ENV{OPENSSL_ROOT_DIR}/include")
     endif()

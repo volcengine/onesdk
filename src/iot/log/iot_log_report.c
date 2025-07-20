@@ -142,7 +142,7 @@ static void s_log_rev_log_report_config(const char* topic, const uint8_t *payloa
     LOGD(TAG_IOT_MQTT, "s_log_rev_log_report_config call log_switch = %d ", log_switch);
     log_handler->log_report_switch = log_switch;
     struct aws_byte_cursor lowest_level_cur = aws_json_get_str_byte_cur_val(data_json, "LowestLevel");
-    log_handler->lowest_level = (enum onesdk_log_level) _log_string_to_level(&lowest_level_cur);
+    log_handler->lowest_level = _log_string_to_level(&lowest_level_cur);
     aws_json_value_destroy(payload_json);
     lws_pthread_mutex_unlock(&log_handler->lock);
 }
@@ -179,7 +179,7 @@ int aiot_log_set_mqtt_handler(log_handler_t *handle, iot_mqtt_ctx_t *mqtt_handle
     return VOLC_OK;
 }
 
-void aiot_log_set_report_switch(log_handler_t *handle, bool is_upload_log, enum onesdk_log_level lowest_level) {
+void aiot_log_set_report_switch(log_handler_t *handle, bool is_upload_log, onesdk_log_level_t lowest_level) {
     handle->lowest_level = lowest_level;
     handle->log_report_switch = is_upload_log;
 }

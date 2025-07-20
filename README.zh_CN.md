@@ -48,6 +48,22 @@ OneSDK是一个面向AI应用的端侧集成开发套件，提供包括大模型
 
 ### 前提条件
 
+**CMake版本要求：**
+- **最低版本**: CMake 3.10
+- **推荐版本**: CMake 3.26.x
+- **不兼容版本**: CMake 4.x（可能导致cJSON兼容性问题）
+
+详细的CMake安装说明请参考 [CMake版本要求](docs/cmake_version_requirements.zh_CN.md)。
+
+**快速版本检查：**
+```bash
+# Linux/macOS
+./scripts/check_cmake_version.sh
+
+# Windows PowerShell
+.\scripts\check_cmake_version.ps1
+```
+
 支持平台：
 - 乐鑫ESP32
 - RTOS(freertos/uc-OS2)

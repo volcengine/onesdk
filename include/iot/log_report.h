@@ -24,7 +24,7 @@ typedef struct log_handler {
     struct aws_allocator *allocator;
     bool log_report_switch;
     platform_mutex_t lock;
-    enum onesdk_log_level lowest_level; // 最新上报level
+    onesdk_log_level_t lowest_level; // 最新上报level
     // struct aws_hash_table* stream_id_config_map;
     bool log_report_config_topic_ready;
     bool stream_log_config_topic_ready;
@@ -35,7 +35,7 @@ log_handler_t *aiot_log_init(void);
 
 int aiot_log_set_mqtt_handler(log_handler_t *handle, iot_mqtt_ctx_t *mqtt_handle);
 
-void aiot_log_set_report_switch(log_handler_t *handle, bool is_upload_log, enum onesdk_log_level lowest_level);
+void aiot_log_set_report_switch(log_handler_t *handle, bool is_upload_log, onesdk_log_level_t lowest_level);
 
 void aiot_log_deinit(log_handler_t *handle);
 

@@ -47,6 +47,22 @@ OneSDK is an integrated development kit for AI applications on the client-side. 
 
 ### Prerequisites
 
+**CMake Version Requirement:**
+- **Minimum**: CMake 3.10
+- **Recommended**: CMake 3.26.x
+- **Incompatible**: CMake 4.x (may cause cJSON compatibility issues)
+
+For detailed CMake installation instructions, see [CMake Version Requirements](docs/cmake_version_requirements.md).
+
+**Quick Version Check:**
+```bash
+# Linux/macOS
+./scripts/check_cmake_version.sh
+
+# Windows PowerShell
+.\scripts\check_cmake_version.ps1
+```
+
 Supported Platforms:
 - Espressif ESP32
 - RTOS (FreeRTOS/uc-OS2)
