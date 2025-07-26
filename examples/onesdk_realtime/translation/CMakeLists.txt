@@ -48,12 +48,12 @@ else()
 endif()
 
     target_link_libraries(${PROJECT_NAME}
-            onesdk cjson pthread
+            onesdk cjson
             ${LIBWEBSOCKETS_DEP_LIBS}
             ${PLATFORM_LIBS})
 else()
     target_link_libraries(${PROJECT_NAME}
-            onesdk_shared cjson pthread
+            onesdk_shared cjson
             ${LIBWEBSOCKETS_DEP_LIBS}
             ${PLATFORM_LIBS})
     add_dependencies(${PROJECT_NAME}

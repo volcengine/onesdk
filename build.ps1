@@ -13,6 +13,10 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host "OneSDK Windows PowerShell Build Script" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Green
 
+# 确保输出不被缓冲
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
 # Check if running as administrator (optional)
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if ($isAdmin) {
@@ -145,10 +149,20 @@ try {
     
     Write-Host "CMake command: cmake $($cmakeArgs -join ' ')" -ForegroundColor Gray
     
-    $cmakeResult = & cmake @cmakeArgs 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Error: CMake configuration failed!" -ForegroundColor Red
-        Write-Host $cmakeResult -ForegroundColor Red
+    # 使用实时输出而不是重定向
+    Write-Host "Executing CMake configuration..." -ForegroundColor Yellow
+    Write-Host "Note: Configuration output will be displayed in real-time." -ForegroundColor Cyan
+    
+    try {
+        & cmake @cmakeArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Error: CMake configuration failed with exit code $LASTEXITCODE!" -ForegroundColor Red
+            Write-Host "Please check the configuration output above for specific error messages." -ForegroundColor Yellow
+            exit 1
+        }
+    } catch {
+        Write-Host "Error: CMake configuration process was interrupted or failed!" -ForegroundColor Red
+        Write-Host "Exception: $($_.Exception.Message)" -ForegroundColor Red
         exit 1
     }
     
@@ -157,19 +171,37 @@ try {
     
     $buildArgs = @(
         "--build", ".",
-        "--config", $BuildType
+        "--config", $BuildType,
+        "--verbose"  # 添加详细输出
     )
     
     if ($Parallel -gt 0) {
         $buildArgs += "--parallel", $Parallel
+        Write-Host "Using $Parallel parallel jobs for building" -ForegroundColor Yellow
+    } else {
+        Write-Host "Using default parallel jobs for building" -ForegroundColor Yellow
     }
     
     Write-Host "Build command: cmake $($buildArgs -join ' ')" -ForegroundColor Gray
+    Write-Host "Starting build process..." -ForegroundColor Green
     
-    $buildResult = & cmake @buildArgs 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Error: Build failed!" -ForegroundColor Red
-        Write-Host $buildResult -ForegroundColor Red
+    # 使用实时输出而不是重定向
+    Write-Host "Executing CMake build..." -ForegroundColor Yellow
+    Write-Host "Note: Build output will be displayed in real-time. Press Ctrl+C to stop if needed." -ForegroundColor Cyan
+    
+    # 确保输出不被缓冲
+    $env:PYTHONUNBUFFERED = "1"
+    
+    try {
+        & cmake @buildArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Error: Build failed with exit code $LASTEXITCODE!" -ForegroundColor Red
+            Write-Host "Please check the build output above for specific error messages." -ForegroundColor Yellow
+            exit 1
+        }
+    } catch {
+        Write-Host "Error: Build process was interrupted or failed!" -ForegroundColor Red
+        Write-Host "Exception: $($_.Exception.Message)" -ForegroundColor Red
         exit 1
     }
     

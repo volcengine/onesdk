@@ -17,6 +17,14 @@
 #include "thing_model/iot_tm_api.h"
 #include "thing_model/property.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 #define TEST_ONESDK_IOT "test_onesdk_iot"
 
 // online vei_dev账户
@@ -39,11 +47,19 @@
 // #define SAMPLE_PRODUCT_KEY "***"
 // #define SAMPLE_PRODUCT_SECRET "***"
 
+#ifdef _WIN32
+DWORD WINAPI keepalive_thread(LPVOID arg) {
+    onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
+    onesdk_iot_keepalive(ctx);
+    return 0;
+}
+#else
 void* keepalive_thread(void *arg) {
     onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
     onesdk_iot_keepalive(ctx);
     return NULL;
 }
+#endif
 
 void test_aiot_ota_download_complete_t(void *handler,
     int error_code, iot_ota_job_info_t *job_info,
@@ -245,7 +261,18 @@ int main() {
         sleep(2);
     }
 
+    // 清理线程
+#ifdef _WIN32
+    TerminateThread(keep_alive_thread, 0);
+    WaitForSingleObject(keep_alive_thread, INFINITE);
+    CloseHandle(keep_alive_thread);
+#else
+    pthread_cancel(keep_alive_thread);
+    pthread_join(keep_alive_thread, NULL);
+#endif
+
     onesdk_iot_tm_deinit(ctx);
     onesdk_deinit(ctx);
+    free(ctx);
     return 0;
 }

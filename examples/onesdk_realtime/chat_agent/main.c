@@ -20,6 +20,14 @@
 #include <string.h>
 #include "onesdk.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 // // relese实例
 // #define SAMPLE_HTTP_HOST "10.249.160.34:9996"
 // #define SAMPLE_INSTANCE_ID "***"
@@ -127,11 +135,19 @@ void error_callback(const char* code, const char *message, void *user_data) {
     printf("Received error code: %s, message: %s\n", code, message);
 }
 
+#ifdef _WIN32
+DWORD WINAPI keepalive_thread(LPVOID arg) {
+    onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
+    onesdk_rt_session_keepalive(ctx);
+    return 0;
+}
+#else
 void* keepalive_thread(void *arg) {
     onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
     onesdk_rt_session_keepalive(ctx);
     return NULL;
 }
+#endif
 
 int main() {
     onesdk_config_t *config = malloc(sizeof(onesdk_config_t));
@@ -181,8 +197,16 @@ int main() {
     }
 
     // create a keep alive thread
+#ifdef _WIN32
+    HANDLE keep_alive_thread = CreateThread(NULL, 0, keepalive_thread, onesdk_ctx, 0, NULL);
+    if (keep_alive_thread == NULL) {
+        printf("Failed to create keep alive thread\n");
+        return 1;
+    }
+#else
     pthread_t keep_alive_thread;
     pthread_create(&keep_alive_thread, NULL, keepalive_thread, onesdk_ctx);
+#endif
     
     // 测试重连发送
     sleep(1);
@@ -190,7 +214,11 @@ int main() {
     for (int i = 0; i < 11; i++) {
         onesdk_rt_audio_send(onesdk_ctx, data[i], strlen(data[i]), false);
         // sleep 100ms
+#ifdef _WIN32
+        Sleep(100);
+#else
         usleep(100 * 1000);
+#endif
     }
     onesdk_rt_audio_send(onesdk_ctx, data[11], strlen(data[11]), true);
     sleep(4);
@@ -198,15 +226,25 @@ int main() {
         // 发送请求
         for (int i = 0; i < 11; i++) {
             onesdk_rt_audio_send(onesdk_ctx, data[i], strlen(data[i]), false);
+#ifdef _WIN32
+            Sleep(100);
+#else
             usleep(100 * 1000);
+#endif
         }
         onesdk_rt_audio_send(onesdk_ctx, data[11], strlen(data[11]), true);
         sleep(4);
     }
 
     // 释放keepalive线程
+#ifdef _WIN32
+    TerminateThread(keep_alive_thread, 0);
+    WaitForSingleObject(keep_alive_thread, INFINITE);
+    CloseHandle(keep_alive_thread);
+#else
     pthread_cancel(keep_alive_thread);
     pthread_join(keep_alive_thread, NULL);
+#endif
 
     // 释放上下文
     onesdk_deinit(onesdk_ctx);

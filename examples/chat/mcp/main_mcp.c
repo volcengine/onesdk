@@ -26,6 +26,14 @@
 #include "protocols/http.h"
 #include "protocols/private_lws_http_client.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 int global_err = 0;
 static char global_sign_root_ca[] = "-----BEGIN CERTIFICATE-----\n"
 "MIIDXzCCAkegAwIBAgILBAAAAAABIVhTCKIwDQYJKoZIhvcNAQELBQAwTDEgMB4G\n"
@@ -159,6 +167,16 @@ void add_tool_result_to_history(ChatHistory *history, char *tool_id, tool_result
 }
 
 
+#ifdef _WIN32
+DWORD WINAPI mcp_receive_thread(LPVOID arg){
+    if(arg == NULL){
+        return 0;
+    }
+    mcp_context_t *ctx = (mcp_context_t *)arg;
+    block_receive_from_sse_server(ctx);
+    return 0;
+}
+#else
 void* mcp_receive_thread(void *arg){
     if(arg == NULL){
         return NULL;
@@ -167,6 +185,7 @@ void* mcp_receive_thread(void *arg){
     block_receive_from_sse_server(ctx);
     return NULL;
 }
+#endif
 
 #ifdef _WIN32
 HANDLE mcp_receiver_run(mcp_context_t *ctx){

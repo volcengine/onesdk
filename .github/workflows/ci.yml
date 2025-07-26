@@ -118,19 +118,19 @@ jobs:
 
     - name: Configure and build with PowerShell
       shell: pwsh
-      # env:
-      #   OPENSSL_ROOT_DIR: C:\ProgramData\chocolatey\lib\openssl\tools\openssl-3.0.12
-      #   OPENSSL_LIBRARIES: C:\ProgramData\chocolatey\lib\openssl\tools\openssl-3.0.12\lib
-      #   OPENSSL_INCLUDE_DIR: C:\ProgramData\chocolatey\lib\openssl\tools\openssl-3.0.12\include
+      env:
+        OPENSSL_ROOT_DIR: C:/Program Files/OpenSSL/
+        OPENSSL_LIBRARIES: C:/Program Files/OpenSSL/lib
+        OPENSSL_INCLUDE_DIR: C:/Program Files/OpenSSL/include
       run: |
         .\build.ps1 -BuildType Debug -CMakeOptions @("-DONESDK_WITH_EXAMPLE=ON")
 
     - name: Test build with batch script
       shell: cmd
-      # env:
-      #   OPENSSL_ROOT_DIR: C:\ProgramData\chocolatey\lib\openssl\tools\openssl-3.0.12
-      #   OPENSSL_LIBRARIES: C:\ProgramData\chocolatey\lib\openssl\tools\openssl-3.0.12\lib
-      #   OPENSSL_INCLUDE_DIR: C:\ProgramData\chocolatey\lib\openssl\tools\openssl-3.0.12\include
+      env:
+        OPENSSL_ROOT_DIR: C:/Program Files/OpenSSL/
+        OPENSSL_LIBRARIES: C:/Program Files/OpenSSL/lib
+        OPENSSL_INCLUDE_DIR: C:/Program Files/OpenSSL/include
       run: |
         build.bat -DCMAKE_BUILD_TYPE=Debug -DONESDK_WITH_EXAMPLE=ON
 
@@ -149,20 +149,32 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y build-essential libssl-dev git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake
 
+    - name: Extract onesdk source code
+      run: |
+        ./build.sh -DONESDK_EXTRACT_SRC=ON -DONESDK_WITH_TEST=OFF -DONESDK_WITH_EXAMPLE=OFF
+        bash ./scripts/copy_onesdk_src.sh
+        ls -la examples/onesdk_esp32/components/
+        ls -la examples/onesdk_esp32_audio/components/
     - name: Setup ESP-IDF
       run: |
+        mkdir -p ~/esp
+        cd ~/esp
         git clone --recursive https://github.com/espressif/esp-idf.git
         cd esp-idf
-        git checkout v5.1.2
+        git checkout v5.5
         ./install.sh esp32s3
-        . ./export.sh
         cd ..
+        pwd
+        echo "IDF_PATH=$PWD/esp-idf" >> $GITHUB_ENV
 
     - name: Build ESP32 examples
       run: |
-        cd esp-idf
+        pwd
+        ls -la
+        cd $IDF_PATH
         . ./export.sh
-        cd ../examples/onesdk_esp32
+        cd -
+        cd ./examples/onesdk_esp32
         idf.py set-target esp32s3
         idf.py build
 
