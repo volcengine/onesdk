@@ -369,9 +369,14 @@ int aigw_ws_send_request(aigw_ws_ctx_t* ctx, const char* json_str) {
     }
     my_item_t msg;
     // need to add LWS_PRE before json_str
-    msg.value = malloc(strlen(json_str) + LWS_PRE);
-    memset(msg.value, 0, strlen(json_str) + LWS_PRE);
-    memcpy(msg.value+LWS_PRE, json_str, strlen(json_str));
+    size_t json_len = strlen(json_str);
+    msg.value = malloc(json_len + LWS_PRE);
+    if (!msg.value) {
+        lwsl_err("Failed to allocate memory for message\n");
+        return VOLC_ERR_MALLOC_FAILED;
+    }
+    memset((char*)msg.value, 0, json_len + LWS_PRE);
+    memcpy((char*)msg.value+LWS_PRE, json_str, json_len);
     msg.len = strlen(json_str);
     lws_pthread_mutex_lock(&ctx->lock);
     int n = (int)lws_ring_insert(ctx->send_ring, &msg, 1);
@@ -397,12 +402,16 @@ void aigw_ws_set_option(aigw_ws_ctx_t *ctx, aigw_ws_option_t option, void* value
         case AIGW_WS_API_KEY:
             ctx->config->api_key = (char*)value;
             break;
-        case AIGW_WS_RECONNECT_INTERVAL:
-            ctx->config->reconnect_interval_ms = *(int*)value;
+        case AIGW_WS_RECONNECT_INTERVAL: {
+            int temp_val = *(int*)value;
+            ctx->config->reconnect_interval_ms = temp_val;
             break;
-        case AIGW_WS_VERIFY_SSL:
-            ctx->config->verify_ssl = *(bool*)value;
+        }
+        case AIGW_WS_VERIFY_SSL: {
+            int temp_val = *(int*)value;
+            ctx->config->verify_ssl = (temp_val != 0);
             break;
+        }
         case AIGW_WS_SSL_CA_PATH:
             ctx->config->ca = (char*)value;
             break;

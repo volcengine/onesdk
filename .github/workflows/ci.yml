@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libssl-dev
+        sudo apt-get install -y build-essential libssl-dev cmake
 
     - name: Setup ${{ matrix.compiler }}
       if: matrix.compiler == 'clang'
@@ -34,7 +34,11 @@ jobs:
     - name: Configure and build
       run: |
         export CC=${{ matrix.compiler }}
-        export CXX=${{ matrix.compiler }}++
+        if [ "${{ matrix.compiler }}" = "gcc" ]; then
+          export CXX=g++
+        else
+          export CXX=${{ matrix.compiler }}++
+        fi
         ./build.sh -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DONESDK_WITH_TEST=ON
 
     - name: Run tests
@@ -43,6 +47,10 @@ jobs:
         ctest --output-on-failure
 
     - name: Build examples
+      env:
+        OPENSSL_ROOT_DIR: /opt/homebrew/opt/openssl@3
+        OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
+        OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
       run: |
         ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
 
@@ -61,9 +69,20 @@ jobs:
 
     - name: Install dependencies
       run: |
-        brew install cmake openssl
+        brew install openssl
+        # Install CMake 3.31.6 from Kitware
+        curl -L https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-macos-universal.dmg -o cmake.dmg
+        hdiutil attach cmake.dmg
+        sudo cp -R /Volumes/cmake-3.31.6-macos-universal/CMake.app /Applications/
+        sudo /Applications/CMake.app/Contents/bin/cmake-gui --install
+        hdiutil detach /Volumes/cmake-3.31.6-macos-universal
+        rm cmake.dmg
 
     - name: Configure and build
+      env:
+        OPENSSL_ROOT_DIR: /opt/homebrew/opt/openssl@3
+        OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
+        OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
       run: |
         ./build.sh -DCMAKE_BUILD_TYPE=debug -DONESDK_WITH_TEST=ON
 
@@ -73,6 +92,10 @@ jobs:
         ctest --output-on-failure
 
     - name: Build examples
+      env:
+        OPENSSL_ROOT_DIR: /opt/homebrew/opt/openssl@3
+        OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
+        OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
       run: |
         ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
 
@@ -88,12 +111,28 @@ jobs:
 
     - name: Install dependencies
       run: |
-        choco install cmake
         choco install mingw
+        choco install openssl
+        # Install CMake 3.31.6
+        choco install cmake --version=3.31.6
 
-    - name: Configure and build
+    - name: Configure and build with PowerShell
+      shell: pwsh
+      env:
+        OPENSSL_ROOT_DIR: C:/Program Files/OpenSSL/
+        OPENSSL_LIBRARIES: C:/Program Files/OpenSSL/lib
+        OPENSSL_INCLUDE_DIR: C:/Program Files/OpenSSL/include
       run: |
-        ./build.sh -DCMAKE_BUILD_TYPE=debug -DONESDK_WITH_EXAMPLE=ON
+        .\build.ps1 -BuildType Debug -CMakeOptions @("-DONESDK_WITH_EXAMPLE=ON")
+
+    - name: Test build with batch script
+      shell: cmd
+      env:
+        OPENSSL_ROOT_DIR: C:/Program Files/OpenSSL/
+        OPENSSL_LIBRARIES: C:/Program Files/OpenSSL/lib
+        OPENSSL_INCLUDE_DIR: C:/Program Files/OpenSSL/include
+      run: |
+        build.bat -DCMAKE_BUILD_TYPE=Debug -DONESDK_WITH_EXAMPLE=ON
 
   # ESP32 Build (using ESP-IDF)
   esp32-build:
@@ -105,15 +144,38 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake
+
+    - name: Extract onesdk source code
+      run: |
+        ./build.sh -DONESDK_EXTRACT_SRC=ON -DONESDK_WITH_TEST=OFF -DONESDK_WITH_EXAMPLE=OFF
+        bash ./scripts/copy_onesdk_src.sh
+        ls -la examples/onesdk_esp32/components/
+        ls -la examples/onesdk_esp32_audio/components/
     - name: Setup ESP-IDF
-      uses: espressif/esp-idf-ci-action@v1
-      with:
-        esp_idf_version: v5.1.2
-        target: esp32s3
+      run: |
+        mkdir -p ~/esp
+        cd ~/esp
+        git clone --recursive https://github.com/espressif/esp-idf.git
+        cd esp-idf
+        git checkout v5.5
+        ./install.sh esp32s3
+        cd ..
+        pwd
+        echo "IDF_PATH=$PWD/esp-idf" >> $GITHUB_ENV
 
     - name: Build ESP32 examples
       run: |
-        cd examples/onesdk_esp32
+        pwd
+        ls -la
+        cd $IDF_PATH
+        . ./export.sh
+        cd -
+        cd ./examples/onesdk_esp32
+        idf.py set-target esp32s3
         idf.py build
 
   # Code Quality Checks
@@ -129,7 +191,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libssl-dev cppcheck
+        sudo apt-get install -y build-essential libssl-dev cppcheck cmake
 
     - name: Static analysis
       run: |
@@ -152,7 +214,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libssl-dev
+        sudo apt-get install -y build-essential libssl-dev cmake
 
     - name: Build with documentation
       run: |
@@ -178,7 +240,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential cmake libssl-dev
+        sudo apt-get install -y build-essential libssl-dev cmake
 
     - name: Build release version
       run: |

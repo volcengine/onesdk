@@ -15,6 +15,14 @@
 #include "iot_mqtt.h"
 #include "iot_log.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#else
+#include <pthread.h>
+#include <unistd.h>
+#endif
+
 // relese实例
 #define SAMPLE_HTTP_HOST "10.249.160.34:9996"
 #define SAMPLE_INSTANCE_ID "***"
@@ -35,6 +43,15 @@ static void _iot_mqtt_message_callback(const char* topic, const uint8_t *payload
     printf("message_callback: topic = %s, payload = %s\n", topic, payload);
 }
 
+#ifdef _WIN32
+DWORD WINAPI keepalive_thread(LPVOID arg) {
+    iot_mqtt_ctx_t *ctx = (iot_mqtt_ctx_t *)arg;
+    int n;
+    while (n >= 0)
+        n = iot_mqtt_run_event_loop(ctx, 1000);
+    return 0;
+}
+#else
 void* keepalive_thread(void *arg) {
     iot_mqtt_ctx_t *ctx = (iot_mqtt_ctx_t *)arg;
     int n;
@@ -42,6 +59,7 @@ void* keepalive_thread(void *arg) {
         n = iot_mqtt_run_event_loop(ctx, 1000);
     return NULL;
 }
+#endif
 
 int main() {
     iot_log_init("");
@@ -73,8 +91,16 @@ int main() {
     printf("password: %s\n", aws_string_c_str(iot_mqtt_config->password));
 
     // create a keep alive thread
+#ifdef _WIN32
+    HANDLE keep_alive_thread = CreateThread(NULL, 0, keepalive_thread, iot_mqtt_ctx, 0, NULL);
+    if (keep_alive_thread == NULL) {
+        printf("Failed to create keep alive thread\n");
+        return 1;
+    }
+#else
     pthread_t keep_alive_thread;
     pthread_create(&keep_alive_thread, NULL, keepalive_thread, iot_mqtt_ctx);
+#endif
     if (iot_mqtt_connect(iot_mqtt_ctx)) {
         printf("iot_mqtt_connect failed\n");
         goto finish;
@@ -115,6 +141,17 @@ int main() {
 
     sleep(100);
 finish:
+    // 清理线程
+#ifdef _WIN32
+    TerminateThread(keep_alive_thread, 0);
+    WaitForSingleObject(keep_alive_thread, INFINITE);
+    CloseHandle(keep_alive_thread);
+#else
+    pthread_cancel(keep_alive_thread);
+    pthread_join(keep_alive_thread, NULL);
+#endif
     iot_mqtt_deinit(iot_mqtt_ctx);
+    free(iot_mqtt_ctx);
+    free(iot_mqtt_config);
     return 1;
 }

@@ -14,15 +14,21 @@
 
 #define ENABLE_AI_REALTIME
 
-#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "onesdk.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#include <process.h>
+#else
 #include <sys/time.h> // 添加头文件
 #include <time.h>     // 添加头文件
+#include <pthread.h>
+#include <unistd.h>
+#endif
 
 static char global_sign_root_ca[] = "-----BEGIN CERTIFICATE-----\n"
 "MIIDXzCCAkegAwIBAgILBAAAAAABIVhTCKIwDQYJKoZIhvcNAQELBQAwTDEgMB4G\n"
@@ -120,11 +126,19 @@ void create_session(aigw_ws_translation_session_t *session) {
     }
 }
 
+#ifdef _WIN32
+DWORD WINAPI keepalive_thread(LPVOID arg) {
+    onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
+    onesdk_rt_session_keepalive(ctx);
+    return 0;
+}
+#else
 void* keepalive_thread(void *arg) {
     onesdk_ctx_t *ctx = (onesdk_ctx_t *)arg;
     onesdk_rt_session_keepalive(ctx);
     return NULL;
 }
+#endif
 
 int main() {
     onesdk_config_t *config = malloc(sizeof(onesdk_config_t));
@@ -175,8 +189,16 @@ int main() {
     }
 
     // create a keep alive thread
+#ifdef _WIN32
+    HANDLE keep_alive_thread = CreateThread(NULL, 0, keepalive_thread, onesdk_ctx, 0, NULL);
+    if (keep_alive_thread == NULL) {
+        printf("Failed to create keep alive thread\n");
+        return 1;
+    }
+#else
     pthread_t keep_alive_thread;
     pthread_create(&keep_alive_thread, NULL, keepalive_thread, onesdk_ctx);
+#endif
     
     aigw_ws_translation_session_t session;
     memset(&session, 0, sizeof(aigw_ws_translation_session_t)); // 初始化结构体
@@ -190,7 +212,11 @@ int main() {
     // 发送请求
     for (int i = 0; i < 11; i++) {
         onesdk_rt_translation_audio_send(onesdk_ctx, data[i], strlen(data[i]), false);
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL); // 100ms delay between each audi
+#ifdef _WIN32
+        Sleep(100); // 100ms delay between each audio
+#else
+        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL); // 100ms delay between each audio
+#endif
     }
     onesdk_rt_translation_audio_send(onesdk_ctx, data[11], strlen(data[11]), true);
 
@@ -198,14 +224,24 @@ int main() {
     // 发送请求
     for (int i = 0; i < 11; i++) {
         onesdk_rt_translation_audio_send(onesdk_ctx, data[i], strlen(data[i]), false);
-        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL); // 100ms delay between each audi
+#ifdef _WIN32
+        Sleep(100); // 100ms delay between each audio
+#else
+        nanosleep((const struct timespec[]){{0, 100000000L}}, NULL); // 100ms delay between each audio
+#endif
     }
     onesdk_rt_translation_audio_send(onesdk_ctx, data[11], strlen(data[11]), true);
 
     sleep(5);
     // 释放keepalive线程
+#ifdef _WIN32
+    TerminateThread(keep_alive_thread, 0);
+    WaitForSingleObject(keep_alive_thread, INFINITE);
+    CloseHandle(keep_alive_thread);
+#else
     pthread_cancel(keep_alive_thread);
     pthread_join(keep_alive_thread, NULL);
+#endif
 
     // 释放上下文
     onesdk_deinit(onesdk_ctx);

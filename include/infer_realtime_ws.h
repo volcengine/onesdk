@@ -17,6 +17,8 @@
 #include "onesdk_config.h"
 
 #include <libwebsockets.h>
+#include "platform_thread.h"
+#include "platform_compat.h"
 #include <stdbool.h>
 #include "iot_basic.h"
 #include "aigw/llm.h"
@@ -55,7 +57,7 @@ typedef struct {
     aigw_ws_message_cb callback;            // 消息回调
     void* userdata;                         // 用户透传数据
     struct lws_ring* send_ring;             // 环形发送缓冲区（线程安全）
-    pthread_mutex_t lock;                   // 连接状态锁
+    platform_mutex_t lock;                   // 连接状态锁
     volatile bool connected;                // 连接活跃标志
     volatile bool try_connect;              // 断连后尝试重连标志，在发送请求的时候判断
     uint32_t tail;

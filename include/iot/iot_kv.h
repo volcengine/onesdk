@@ -16,18 +16,20 @@
 #define ARENAL_IOT_IOT_KV_H
 #ifdef ONESDK_ENABLE_IOT
 
-#include <pthread.h>
 #include "aws/common/byte_buf.h"
 #include "aws/common/json.h"
 #include "aws/common/array_list.h"
 #include "aws/common/string.h"
+#include <libwebsockets.h>
+#include "platform_thread.h"
+#include "platform_compat.h"
 
 struct iot_kv_ctx {
     struct aws_allocator *alloc;
     struct aws_string *file_path;
     struct aws_json_value *kv_json_data;
     // 读写锁
-    pthread_mutex_t lock;
+    platform_mutex_t lock;
 };
 
 /**

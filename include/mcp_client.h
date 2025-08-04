@@ -24,6 +24,8 @@
 #include "cJSON.h"
 #include "onesdk_chat.h"
 #include <libwebsockets.h>
+#include "platform_thread.h"
+#include "platform_compat.h"
 
 
 // typedef struct _input_schema_s{
@@ -65,7 +67,7 @@ typedef struct _sse_message_s{
 }sse_message_t;
 
 typedef struct _mcp_context_s{
-    pthread_mutex_t lock;
+    platform_mutex_t lock;
     http_request_context_t *http_ctx;
     int initialize_request_id;
     bool initialized;

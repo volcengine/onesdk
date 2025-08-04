@@ -17,6 +17,10 @@
 
 #include "iot_log.h"
 #include "aws/common/array_list.h"
+
+#ifndef LOG_LEVEL_COUNT
+#define LOG_LEVEL_COUNT 6
+#endif
 #include "aws/common/common.h"
 #include "aws/common/date_time.h"
 #include "util/util.h"
@@ -29,15 +33,15 @@
 struct iot_log_ctx g_logCtx_internal;
 struct iot_log_ctx *g_logCtx;
 
-static const char *s_log_level_strings[COUNT] = {"NONE", "FATAL", "ERROR", "WARN", "INFO", "DEBUG"};
+static const char *s_log_level_strings[6] = {"NONE", "FATAL", "ERROR", "WARN", "INFO", "DEBUG"};
 
-void _log_level_to_string(enum onesdk_log_level log_level, const char **level_string) {
+void _log_level_to_string(onesdk_log_level_t log_level, const char **level_string) {
     if (level_string != NULL) {
         *level_string = s_log_level_strings[log_level];
     }
 }
 
-enum onesdk_log_level _log_string_to_level(struct aws_byte_cursor *lowest_level_cur) {
+onesdk_log_level_t _log_string_to_level(struct aws_byte_cursor *lowest_level_cur) {
     if (aws_byte_cursor_eq_c_str(lowest_level_cur, "debug") || aws_byte_cursor_eq_c_str(lowest_level_cur, "DEBUG")) {
         return DEBUG;
     } else if (aws_byte_cursor_eq_c_str(lowest_level_cur, "info") || aws_byte_cursor_eq_c_str(lowest_level_cur, "INFO")) {
@@ -154,7 +158,7 @@ static bool s_background_wait(void *context) {
 }
 
 // 日志格式化
-void _log_format(enum onesdk_log_level level, struct iot_log_obj *logObj, const char *logType, const char *tag,
+void _log_format(onesdk_log_level_t level, struct iot_log_obj *logObj, const char *logType, const char *tag,
     const char *format,
     va_list format_args) {
     va_list tmp_args;
@@ -274,7 +278,7 @@ int _s_background_channel_send(struct iot_log_ctx *impl, struct iot_log_obj *log
     return AWS_OP_SUCCESS;
 }
 
-void sdk_log_print(enum onesdk_log_level level, const char *logType, const char *tag, const char *format, ...) {
+void sdk_log_print(onesdk_log_level_t level, const char *logType, const char *tag, const char *format, ...) {
     va_list format_args;
     va_start(format_args, format);
     if (g_logCtx == NULL || g_logCtx->finished) {

@@ -31,7 +31,16 @@ static char* get_default_interface();
 static bool get_mac_address(const char* ifname, char* buf, size_t buf_size);
 
 char *plat_hardware_id() {
-#ifdef __linux__
+#ifdef _WIN32
+    // Windows implementation
+    if (router_mac[0] != '\0') {
+        return strdup(router_mac);
+    }
+    
+    // Try to get MAC address from Windows registry or network adapter
+    // For now, use fallback method
+    return fallback_mac_addr();
+#elif defined(__linux__)
     if (router_mac[0] != '\0') {
         return strdup(router_mac);
     }
@@ -54,6 +63,10 @@ char *plat_hardware_id() {
 
 // 新增帮助函数实现
 static char* get_default_interface() {
+#ifdef _WIN32
+    // Windows implementation - for now return NULL to use fallback
+    return NULL;
+#elif defined(__linux__)
     FILE *fp = fopen("/proc/net/route", "r");
     if (!fp) return NULL;
 
@@ -70,9 +83,16 @@ static char* get_default_interface() {
 
     fclose(fp);
     return NULL;
+#else
+    return NULL;
+#endif
 }
 
 static bool get_mac_address(const char* ifname, char* buf, size_t buf_size) {
+#ifdef _WIN32
+    // Windows implementation - for now return false to use fallback
+    return false;
+#elif defined(__linux__)
     char path[256];
     snprintf(path, sizeof(path), "/sys/class/net/%s/address", ifname);
 
@@ -88,6 +108,9 @@ static bool get_mac_address(const char* ifname, char* buf, size_t buf_size) {
 
     fclose(fp);
     return false;
+#else
+    return false;
+#endif
 }
 
 char *fallback_mac_addr() {

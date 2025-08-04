@@ -20,6 +20,11 @@
 #include <stdio.h>
 #include "iot/iot_popen.h"
 #include <stdlib.h>
+#ifdef _WIN32
+#include <process.h>
+#define pclose _pclose
+#define popen _popen
+#endif
 
 int iot_popen(const char* cmd, const char* mode, const char* data, int data_len) {
     if (cmd == NULL || mode == NULL) {

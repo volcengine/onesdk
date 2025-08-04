@@ -41,23 +41,59 @@ OneSDK是一个面向AI应用的端侧集成开发套件，提供包括大模型
   - SSH: 支持控制台ssh链接
   - 日志: 支持设备操作日志上传
 - 设备安全
-  - 支持设备端”一机一秘钥“与"一型一秘钥"身份认证
+  - 支持设备端"一机一秘钥"与"一型一秘钥"身份认证
   - 支持设备证书
 
 ## 快速开始
 
 ### 前提条件
 
+**CMake版本要求：**
+- **最低版本**: CMake 3.10
+- **推荐版本**: CMake 3.26.x
+- **不兼容版本**: CMake 4.x（可能导致cJSON兼容性问题）
+
+详细的CMake安装说明请参考 [CMake版本要求](docs/cmake_version_requirements.zh_CN.md)。
+
+**快速版本检查：**
+```bash
+# Linux/macOS
+./scripts/check_cmake_version.sh
+
+# Windows PowerShell
+.\scripts\check_cmake_version.ps1
+```
+
 支持平台：
 - 乐鑫ESP32
 - RTOS(freertos/uc-OS2)
 - Linux（amd64/arm64)
 - MacOS(apple silicon/intel)
-- Windows
+- Windows (x64/x86)
 
 ### 安装、编译、运行
 
+#### Linux/MacOS
 参考 [开发指导](docs/develop.zh_CN.md)
+
+#### Windows
+参考 [Windows开发指导](docs/develop_windows.md) 获取详细的Windows环境搭建和构建说明。
+
+**Windows快速构建：**
+```cmd
+# 克隆仓库
+git clone --recursive https://github.com/volcengine/onesdk.git
+cd onesdk
+
+# 使用Visual Studio构建（推荐）
+build.bat
+
+# 或使用MinGW-w64构建
+mkdir build
+cd build
+cmake -G "MinGW Makefiles" ..
+mingw32-make
+```
 
 Note:
 对于中文商业化客户，建议参考 [边缘智能-OneSDK集成说明](https://bytedance.larkoffice.com/wiki/VlHsw5p76i1iSUkOcXJclg4Nnaf#share-TewzdIpI5o5BisxAW2HcKJfBnSc) 构建编译和运行
@@ -76,4 +112,27 @@ Note:
 如果你在此项目中发现了一个潜在的安全问题，请联系[字节跳动安全中心](https://security.bytedance.com/src) 或发送邮件到[漏洞汇报](sec@bytedance.com).
 
 请**不要**创建公开的Github issue.
+
+# Windows 跨平台适配说明
+
+- 本项目已适配 Windows 平台，所有 POSIX 相关接口（如 `gettimeofday`、`timezone`、`strtok_r`、`localtime_r`、`gmtime_r`、原子操作等）均已在 `include/platform_compat.h` 中做了兼容实现。
+- 示例代码中的线程相关接口已兼容 Windows 线程 API。
+- 默认关闭示例编译（`ONESDK_WITH_EXAMPLE=OFF`），如需编译请确保 OpenSSL 已正确安装并配置环境变量。
+- 主库编译不依赖 OpenSSL，示例如需 TLS/SSL 功能请手动安装 OpenSSL。
+
+## 依赖说明
+- Windows 下无需 `sys/time.h`、`pthread.h`，相关功能已在 `platform_compat.h` 里做了兼容。
+- 主库不再强制依赖 OpenSSL，示例如需 TLS/SSL 功能需自行安装 OpenSSL 并配置环境变量 `OPENSSL_ROOT_DIR`。
+
+## 编译环境
+- 推荐使用 Visual Studio 2019/2022 + CMake 3.10+。
+- 需要安装 Windows SDK。
+- 如需编译示例，建议安装 OpenSSL。
+
+## 常见问题
+- 遇到 `sys/time.h`、`pthread.h`、`openssl/ssl.h` 找不到时，请确认已正确配置依赖或关闭相关功能。
+- 如何切换/关闭 TLS 支持（CMake 选项 `LWS_WITH_TLS`）。
+- 如何在 Windows 下配置 OpenSSL 环境变量。
+
+---
 

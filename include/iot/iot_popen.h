@@ -17,8 +17,12 @@
 #define ARENAL_IOT_IOT_POPEN_H
 #ifdef ONESDK_ENABLE_IOT
 
-#include <unistd.h>
 #include <stdio.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 int iot_popen(const char* cmd, const char* mode, const char* data, int data_len);
 

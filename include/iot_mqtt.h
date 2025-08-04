@@ -18,6 +18,8 @@
 #define ONESDK_IOT_MQTT_H
 
 #include <libwebsockets.h>
+#include "platform_thread.h"
+#include "platform_compat.h"
 #include "iot_basic.h"
 #include "aws/common/string.h"
 
@@ -83,8 +85,8 @@ typedef struct {
     size_t sub_topic_count;
     iot_mqtt_pending_sub_list_t *pending_sub_list;
     iot_mqtt_pending_pub_list_t *pending_pub_list;
-    pthread_mutex_t sub_topic_mutex;
-    pthread_mutex_t pub_topic_mutex;
+    platform_mutex_t sub_topic_mutex;
+    platform_mutex_t pub_topic_mutex;
     bool is_connected;
     void *user_data;
     volatile bool waiting_for_suback;

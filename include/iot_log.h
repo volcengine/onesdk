@@ -20,21 +20,33 @@
 #include <stdint.h>
 #include "aws/common/common.h"
 #include "aws/common/array_list.h"
-#include <pthread.h>
 #include <libwebsockets.h>
+#include "platform_thread.h"
+#include "platform_compat.h"
 
 #define LOG_TYPE_SDK  "sdk"
 #define LOG_TYPE_DEVICE "device"
 
-enum onesdk_log_level {
-    NONE,
-    FATAL,
-    ERROR,
-    WARN,
-    INFO,
-    DEBUG,
-    COUNT,
-};
+typedef enum {
+    ONESDK_LOG_NONE = 0,
+    ONESDK_LOG_FATAL = 1,
+    ONESDK_LOG_ERROR = 2,
+    ONESDK_LOG_WARN = 3,
+    ONESDK_LOG_INFO = 4,
+    ONESDK_LOG_DEBUG = 5
+} onesdk_log_level_t;
+
+#define LOG_LEVEL_COUNT 6
+
+// 为了兼容性，定义旧的枚举值
+#define NONE ONESDK_LOG_NONE
+#define FATAL ONESDK_LOG_FATAL
+#ifndef ERROR  // 避免与Windows头文件冲突
+#define ERROR ONESDK_LOG_ERROR
+#endif
+#define WARN ONESDK_LOG_WARN
+#define INFO ONESDK_LOG_INFO
+#define DEBUG ONESDK_LOG_DEBUG
 
 #define LOGF(tag, ...) sdk_log_print(FATAL,LOG_TYPE_SDK, tag,__VA_ARGS__)
 #define LOGE(tag, ...) sdk_log_print(ERROR,LOG_TYPE_SDK, tag,__VA_ARGS__)
@@ -48,7 +60,6 @@ enum onesdk_log_level {
 #define DEVICE_LOGI(tag, ...) sdk_log_print(INFO,LOG_TYPE_DEVICE, tag,__VA_ARGS__)
 #define DEVICE_LOGD(tag, ...) sdk_log_print(DEBUG,LOG_TYPE_DEVICE, tag,__VA_ARGS__)
 
-
 struct iot_log_ctx_option {
     // 日志写入文件的时间间隔
     int32_t check_write_file_line_count;
@@ -57,12 +68,12 @@ struct iot_log_ctx_option {
     int32_t check_write_file_interval_sec;
 };
 
-void sdk_log_print(enum onesdk_log_level level, const char *logType, const char *tag, const char *format, ...);
+void sdk_log_print(onesdk_log_level_t level, const char *logType, const char *tag, const char *format, ...);
 
 struct iot_log_obj {
     uint64_t time;
     const char *logLevelStr;
-    enum onesdk_log_level log_level;
+    onesdk_log_level_t log_level;
     const char *logType;
     struct aws_string *logContent;
 };
@@ -72,7 +83,7 @@ typedef void(iot_on_log_save_fn)(struct aws_array_list *log_lines, void *userdat
 struct iot_log_ctx {
     struct aws_allocator *allocator;
     char *save_dir_path;
-    pthread_mutex_t sync;
+    platform_mutex_t sync;
     // struct aws_thread background_thread;
     struct aws_array_list pending_log_lines;
     // struct aws_condition_variable pending_line_signal;
@@ -96,6 +107,6 @@ void iot_log_deinit();
 
 void iot_log_set_on_log_save_fn(iot_on_log_save_fn *on_save_fn, void *user_data);
 
-enum onesdk_log_level _log_string_to_level(struct aws_byte_cursor *lowest_level_cur);
+onesdk_log_level_t _log_string_to_level(struct aws_byte_cursor *lowest_level_cur);
 
 #endif //ONESDK_IOT_IOT_LOG_H

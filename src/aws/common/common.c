@@ -6,6 +6,7 @@
 #include "common.h"
 #include "math.h"
 #include "json.h"
+#include "platform_compat.h"
 
 #include <stdarg.h>
 #include <stdlib.h>

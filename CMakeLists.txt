@@ -1,9 +1,16 @@
 # CMake minimum version requirement
-cmake_minimum_required(VERSION 3.6)
+# Using 3.10 for cJSON compatibility - avoid CMake 4.x which may cause issues
+cmake_minimum_required(VERSION 3.10)
 
 project(onesdk VERSION 0.1)
 
 set(CMAKE_C_STANDARD 11)
+
+# Add UTF-8 support for MSVC to handle libwebsockets encoding issues
+if(MSVC)
+    add_compile_options(/utf-8)
+    add_compile_options(/wd4819)  # Suppress encoding warnings
+endif()
 
 # ### ONESDK OPTIONS  ###
 # Enable AI functionality
@@ -79,15 +86,28 @@ endif()
 # Compilation toolchain
 set(COMPILE_TOOLS "gcc")
 set(BUILD_PLATFORM "linux")
+
+# Platform detection and configuration
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(BUILD_PLATFORM "macos")
-endif ()
-
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(BUILD_PLATFORM "windows")
+    # Windows specific settings
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    # Use MSVC compiler flags
+    if(MSVC)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3")
+        set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
+        set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
+    endif()
+endif()
 
 set(EXTERNAL_LIB_DIR "${PROJECT_SOURCE_DIR}/external_libs" CACHE INTERNAL "external libraries root.")
 
 message(STATUS "PROJECT SRC DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "PROJECT BIN DIR: ${PROJECT_BINARY_DIR}")
+message(STATUS "BUILD PLATFORM: ${BUILD_PLATFORM}")
+
 # Add include and external_libs/include to header file search path
 include_directories(
 		${PROJECT_SOURCE_DIR}/include
@@ -99,6 +119,26 @@ include_directories(
         ${PROJECT_BINARY_DIR}/external_libs/libwebsockets
 		${PROJECT_BINARY_DIR}/include
 )
+
+# Platform specific include directories
+if(BUILD_PLATFORM STREQUAL "windows")
+    # Add Windows SDK paths if available
+    if(DEFINED ENV{WINDOWS_SDK_PATH})
+        include_directories("$ENV{WINDOWS_SDK_PATH}/Include")
+    endif()
+    # Add OpenSSL paths for Windows
+	message(STATUS "OPENSSL_ROOT_DIR for onesdk: $ENV{OPENSSL_ROOT_DIR}")
+	# include_directories("C:/Program Files/OpenSSL-Win64/include")
+    if(DEFINED ENV{OPENSSL_ROOT_DIR})
+        include_directories("$ENV{OPENSSL_ROOT_DIR}/include")
+    endif()
+elseif(BUILD_PLATFORM STREQUAL "macos")
+    # Add OpenSSL paths for macOS
+    if(DEFINED ENV{OPENSSL_ROOT_DIR})
+        include_directories("$ENV{OPENSSL_ROOT_DIR}/include")
+    endif()
+endif()
+
 if (ONESDK_ENABLE_IOT)
 	option(LWS_ROLE_MQTT "Build with support for MQTT client" ON)
 	set(LWS_ROLE_MQTT ON)
@@ -113,6 +153,13 @@ if(BUILD_PLATFORM STREQUAL "macos")
 	set(COREFOUNDATION_FRAMEWORK "-framework CoreFoundation")
 else()
 	set(COREFOUNDATION_FRAMEWORK "")
+endif()
+
+# Windows specific libraries
+if(BUILD_PLATFORM STREQUAL "windows")
+    set(WINDOWS_LIBS ws2_32 crypt32 iphlpapi)
+else()
+    set(WINDOWS_LIBS "")
 endif()
 
 # Build type: release/debug
@@ -169,6 +216,7 @@ if (ONESDK_WITH_SHARED)
 		websockets_shared
 		cjson
 		${COREFOUNDATION_FRAMEWORK}
+		${WINDOWS_LIBS}
 	)
 endif()
 if (ONESDK_WITH_STATIC)
@@ -177,32 +225,48 @@ if (ONESDK_WITH_STATIC)
         websockets
         ${LIBWEBSOCKETS_DEP_LIBS}
         ${COREFOUNDATION_FRAMEWORK}
+        ${WINDOWS_LIBS}
     )
 endif()
 
 ## compiler options ##
 include(CheckCCompilerFlag)
 
-# Check if compiler supports -Wincompatible-pointer-types option
-check_c_compiler_flag(-Wincompatible-pointer-types HAS_INCOMPATIBLE_POINTER_TYPES)
-if (HAS_INCOMPATIBLE_POINTER_TYPES)
-    # If supported, treat it as an error
-    if (ONESDK_WITH_STATIC)
-		target_compile_options(${PROJECT_NAME} PRIVATE -Werror=incompatible-pointer-types)
-	endif()
-	if (ONESDK_WITH_SHARED)
-		target_compile_options(${PROJECT_NAME}_shared PRIVATE -Werror=incompatible-pointer-types)
-	endif()
-endif()
+# Platform-specific compiler options
+if(BUILD_PLATFORM STREQUAL "windows")
+    # Windows specific compiler options
+    if(MSVC)
+        # MSVC specific warnings and options
+        target_compile_options(onesdk_shared PRIVATE /W3 /D_CRT_SECURE_NO_WARNINGS)
+        target_compile_options(onesdk PRIVATE /W3 /D_CRT_SECURE_NO_WARNINGS)
+    else()
+        # MinGW specific options
+        target_compile_options(onesdk_shared PRIVATE -Wall -Wextra)
+        target_compile_options(onesdk PRIVATE -Wall -Wextra)
+    endif()
+else()
+    # Unix-like platforms (Linux/macOS)
+    # Check if compiler supports -Wincompatible-pointer-types option
+    check_c_compiler_flag(-Wincompatible-pointer-types HAS_INCOMPATIBLE_POINTER_TYPES)
+    if (HAS_INCOMPATIBLE_POINTER_TYPES)
+        # If supported, treat it as an error
+        if (ONESDK_WITH_STATIC)
+    		target_compile_options(${PROJECT_NAME} PRIVATE -Werror=incompatible-pointer-types)
+    	endif()
+    	if (ONESDK_WITH_SHARED)
+    		target_compile_options(${PROJECT_NAME}_shared PRIVATE -Werror=incompatible-pointer-types)
+    	endif()
+    endif()
 
-check_c_compiler_flag(-Wimplicit-function-declaration HAS_IMPLICIT_FUNCTION_DECLARATION)
-if (HAS_IMPLICIT_FUNCTION_DECLARATION)
-	if (ONESDK_WITH_STATIC)
-    	target_compile_options(${PROJECT_NAME} PRIVATE -Wimplicit-function-declaration)
-	endif()
-	if (ONESDK_WITH_SHARED)
-		target_compile_options(${PROJECT_NAME}_shared PRIVATE -Wimplicit-function-declaration)
-	endif()
+    check_c_compiler_flag(-Wimplicit-function-declaration HAS_IMPLICIT_FUNCTION_DECLARATION)
+    if (HAS_IMPLICIT_FUNCTION_DECLARATION)
+    	if (ONESDK_WITH_STATIC)
+        	target_compile_options(${PROJECT_NAME} PRIVATE -Wimplicit-function-declaration)
+    	endif()
+    	if (ONESDK_WITH_SHARED)
+    		target_compile_options(${PROJECT_NAME}_shared PRIVATE -Wimplicit-function-declaration)
+    	endif()
+    endif()
 endif()
 ## compiler options ##
 
@@ -224,6 +288,21 @@ if (APPLE)
 
 	# list (APPEND AWS_COMMON_OS_SRC "source/darwin/*.c") # OS specific includes
 	# list (APPEND AWS_COMMON_OS_SRC "source/platform_fallback_stubs/system_info.c")
+elseif(BUILD_PLATFORM STREQUAL "windows")
+    # Windows platform specific libraries
+    find_package(Threads REQUIRED)
+    list(APPEND PLATFORM_LIBS Threads::Threads)
+    
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${PLATFORM_LIBS})
+    target_link_libraries(${PROJECT_NAME}_shared PUBLIC ${PLATFORM_LIBS})
+else()
+    # Linux platform
+    find_package(Threads REQUIRED)
+    list(APPEND PLATFORM_LIBS dl Threads::Threads)
+    list(APPEND PLATFORM_LIBS ${CMAKE_DL_LIBS})
+    
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${PLATFORM_LIBS})
+    target_link_libraries(${PROJECT_NAME}_shared PUBLIC ${PLATFORM_LIBS})
 endif()
 
 # Output include files for dependent projects to reference
