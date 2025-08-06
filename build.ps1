@@ -39,8 +39,8 @@ try {
         
         if ($majorVersion -eq 3 -and $minorVersion -ge 10) {
             Write-Host "CMake version is compatible (3.x)" -ForegroundColor Green
-        } elseif ($majorVersion -gt 3) {
-            Write-Host "Warning: CMake version $cmakeVersion is higher than 3.x" -ForegroundColor Yellow
+        } elseif ($majorVersion -eq 4) {
+            Write-Host "Warning: CMake version $cmakeVersion is 4.x" -ForegroundColor Yellow
             Write-Host "This may cause compatibility issues with cJSON" -ForegroundColor Yellow
             Write-Host "Consider using CMake 3.26.x for best compatibility" -ForegroundColor Yellow
             
@@ -48,6 +48,10 @@ try {
             if ($response -notmatch "^[Yy]$") {
                 exit 1
             }
+        } elseif ($majorVersion -gt 4) {
+            Write-Host "Error: CMake version $cmakeVersion is too new. Maximum supported: 4.x" -ForegroundColor Red
+            Write-Host "Please use CMake 3.10-4.x for compatibility" -ForegroundColor Red
+            exit 1
         } else {
             Write-Host "Error: CMake version $cmakeVersion is too old. Minimum required: 3.10" -ForegroundColor Red
             exit 1
@@ -210,8 +214,8 @@ try {
     Write-Host "========================================" -ForegroundColor Green
     Write-Host ""
     Write-Host "Build artifacts are located in:" -ForegroundColor Cyan
-    Write-Host "  - Libraries: build\lib\" -ForegroundColor White
-    Write-Host "  - Executables: build\bin\$BuildType\" -ForegroundColor White
+    Write-Host "  - Libraries: build\$BuildType\" -ForegroundColor White
+    Write-Host "  - Executables: build\$BuildType\" -ForegroundColor White
     Write-Host "  - Headers: build\include\" -ForegroundColor White
     Write-Host ""
     
@@ -231,5 +235,5 @@ try {
 
 Write-Host ""
 Write-Host "To run an example:" -ForegroundColor Cyan
-Write-Host "  cd build\bin\$BuildType" -ForegroundColor White
+Write-Host "  cd build\examples\chat\chatbot\$BuildType" -ForegroundColor White
 Write-Host "  .\onesdk_chatbot_example.exe" -ForegroundColor White 

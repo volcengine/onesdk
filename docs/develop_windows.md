@@ -1,73 +1,73 @@
-# OneSDK Windows 开发指南
+# OneSDK Windows Development Guide
 
-本文档提供了在Windows平台上搭建OneSDK开发环境、编译源代码和运行示例的详细指南。
+This document provides a detailed guide for setting up the OneSDK development environment, compiling source code, and running examples on the Windows platform.
 
-## 1. 环境要求
+## 1. Environment Requirements
 
-### 1.1. 系统要求
-- **操作系统**: Windows 10 或更高版本
-- **架构**: x64 (推荐) 或 x86
-- **内存**: 至少 4GB RAM
-- **磁盘空间**: 至少 2GB 可用空间
+### 1.1. System Requirements
+- **Operating System**: Windows 10 or higher
+- **Architecture**: x64 (recommended) or x86
+- **Memory**: At least 4GB RAM
+- **Disk Space**: At least 2GB available space
 
-### 1.2. 必需工具
+### 1.2. Required Tools
 
-#### 1.2.1. Visual Studio (推荐)
-- **Visual Studio 2019** 或 **Visual Studio 2022**
-- 安装以下工作负载：
-  - 使用C++的桌面开发
-  - CMake工具
-- 或者安装 **Visual Studio Build Tools**
+#### 1.2.1. Visual Studio (Recommended)
+- **Visual Studio 2019** or **Visual Studio 2022**
+- Install the following workloads:
+  - Desktop development with C++
+  - CMake tools
+- Or install **Visual Studio Build Tools**
 
-#### 1.2.2. 替代方案：MinGW-w64
-如果不想使用Visual Studio，可以使用MinGW-w64：
-- 下载并安装 [MSYS2](https://www.msys2.org/)
-- 通过MSYS2安装MinGW-w64工具链
+#### 1.2.2. Alternative: MinGW-w64
+If you don't want to use Visual Studio, you can use MinGW-w64:
+- Download and install [MSYS2](https://www.msys2.org/)
+- Install MinGW-w64 toolchain through MSYS2
 
 #### 1.2.3. CMake
-- **版本要求**: 3.10 或更高版本
-- **安装方式**:
-  - 通过Visual Studio安装器安装
-  - 或从 [CMake官网](https://cmake.org/download/) 下载安装
+- **Version Requirement**: CMake 3.10+ but not higher than 4.x
+- **Installation Methods**:
+  - Install through Visual Studio installer
+  - Or download from [CMake official website](https://cmake.org/download/)
 
 #### 1.2.4. Git
-- 从 [Git官网](https://git-scm.com/download/win) 下载安装
+- Download and install from [Git official website](https://git-scm.com/download/win)
 
-#### 1.2.5. OpenSSL (可选)
-如果需要TLS支持，建议安装OpenSSL：
-- 从 [OpenSSL官网](https://slproweb.com/products/Win32OpenSSL.html) 下载
-- 或使用vcpkg包管理器安装
+#### 1.2.5. OpenSSL (Optional)
+If TLS support is needed, it's recommended to install OpenSSL:
+- Download from [OpenSSL official website](https://slproweb.com/products/Win32OpenSSL.html)
+- Or install using vcpkg package manager
 
-## 2. 环境搭建
+## 2. Environment Setup
 
-### 2.1. 使用Visual Studio (推荐)
+### 2.1. Using Visual Studio (Recommended)
 
-#### 2.1.1. 安装Visual Studio
-1. 下载 [Visual Studio Installer](https://visualstudio.microsoft.com/downloads/)
-2. 运行安装器，选择"使用C++的桌面开发"工作负载
-3. 确保选中以下组件：
-   - MSVC v143编译器工具集
+#### 2.1.1. Install Visual Studio
+1. Download [Visual Studio Installer](https://visualstudio.microsoft.com/downloads/)
+2. Run the installer and select "Desktop development with C++" workload
+3. Ensure the following components are selected:
+   - MSVC v143 compiler toolset
    - Windows 10/11 SDK
-   - CMake工具
+   - CMake tools
    - Git for Windows
 
-#### 2.1.2. 配置环境变量
-设置以下环境变量（可选，用于自定义路径）：
+#### 2.1.2. Configure Environment Variables
+Set the following environment variables (optional, for custom paths):
 ```cmd
 set OPENSSL_ROOT_DIR=C:\OpenSSL-Win64
 set WINDOWS_SDK_PATH=C:\Program Files (x86)\Windows Kits\10
 ```
 
-### 2.2. 使用MinGW-w64
+### 2.2. Using MinGW-w64 (Alternative)
 
-#### 2.2.1. 安装MSYS2
-1. 下载并安装 [MSYS2](https://www.msys2.org/)
-2. 打开MSYS2终端，更新包数据库：
+#### 2.2.1. Install MSYS2
+1. Download and install [MSYS2](https://www.msys2.org/)
+2. Open MSYS2 terminal and update package database:
    ```bash
    pacman -Syu
    ```
 
-#### 2.2.2. 安装开发工具
+#### 2.2.2. Install Development Tools
 ```bash
 pacman -S mingw-w64-x86_64-toolchain
 pacman -S mingw-w64-x86_64-cmake
@@ -75,46 +75,46 @@ pacman -S mingw-w64-x86_64-openssl
 pacman -S git
 ```
 
-#### 2.2.3. 配置PATH
-将MinGW-w64的bin目录添加到系统PATH：
+#### 2.2.3. Configure PATH
+Add MinGW-w64's bin directory to system PATH:
 ```
 C:\msys64\mingw64\bin
 ```
 
-## 3. 获取代码
+## 3. Get the Code
 
-### 3.1. 克隆仓库
+### 3.1. Clone Repository
 ```cmd
 git clone --recursive https://github.com/volcengine/onesdk.git
 cd onesdk
 ```
 
-### 3.2. 检查依赖
-确保所有子模块都已正确下载：
+### 3.2. Check Dependencies
+Ensure all submodules are properly downloaded:
 ```cmd
 git submodule update --init --recursive
 ```
 
-## 4. 配置连接凭据
+## 4. Configure Connection Credentials
 
-在运行示例之前，需要从火山引擎IoT平台控制台获取以下凭据并配置到示例源代码中：
+Before running examples, you need to obtain the following credentials from the Volcengine IoT Platform console and configure them in the example source code:
 
-- **IoT管理API主机**: `https://iot-cn-shanghai.iot.volces.com` (固定值)
-- **IoT MQTT主机**: `<instance-id>-cn-shanghai.iot.volces.com`
-- **实例ID**: 您的服务实例ID
-- **产品密钥**: 所有认证类型都需要
-- **产品密钥**: "按类型"认证需要
-- **设备名称**: 所有认证类型都需要
-- **设备密钥**: "按设备"认证需要
+- **IoT Management API Host**: `https://iot-cn-shanghai.iot.volces.com` (fixed value)
+- **IoT MQTT Host**: `<instance-id>-cn-shanghai.iot.volces.com`
+- **Instance ID**: Your service instance ID
+- **Product Key**: Required for all authentication types
+- **Product Secret**: Required for "by type" authentication
+- **Device Name**: Required for all authentication types
+- **Device Secret**: Required for "by device" authentication
 
-*注意：对于"按类型"动态注册（`ONESDK_AUTH_DYNAMIC_PRE_REGISTERED`或`ONESDK_AUTH_DYNAMIC_NO_PRE_REGISTERED`），您必须在控制台中为产品启用"启用动态注册"开关。*
+*Note: For "by type" dynamic registration (`ONESDK_AUTH_DYNAMIC_PRE_REGISTERED` or `ONESDK_AUTH_DYNAMIC_NO_PRE_REGISTERED`), you must enable the "Enable Dynamic Registration" switch for the product in the console.*
 
-## 5. 构建和运行示例
+## 5. Build and Run Examples
 
-### 5.1. 使用Visual Studio
+### 5.1. Using Visual Studio
 
-#### 5.1.1. 配置示例参数
-打开示例文件，如 `examples/chat/text_image/main_text_image.c`，填入上一步获取的凭据：
+#### 5.1.1. Configure Example Parameters
+Open example files, such as `examples/chat/text_image/main_text_image.c`, and fill in the credentials obtained in the previous step:
 
 ```c
 #define SAMPLE_HTTP_HOST "https://iot-cn-shanghai.iot.volces.com"
@@ -123,40 +123,47 @@ git submodule update --init --recursive
 #define SAMPLE_PRODUCT_KEY "<your_product_key>"
 #define SAMPLE_DEVICE_NAME "<your_device_name>"
 
-// 用于按设备认证
+// For device-based authentication
 #define SAMPLE_DEVICE_SECRET "<your_device_secret>" 
 
-// 用于按类型认证
+// For type-based authentication
 #define SAMPLE_PRODUCT_SECRET "<your_product_secret>"
 ```
 
-#### 5.1.2. 构建项目
-在项目根目录运行：
+#### 5.1.2. Build Project
+
+Run in the project root directory:
+
 ```cmd
 build.bat
 ```
+Or
 
-或者使用CMake GUI：
-1. 打开CMake GUI
-2. 设置源代码目录为项目根目录
-3. 设置构建目录为 `build`
-4. 点击"Configure"，选择Visual Studio版本
-5. 点击"Generate"
-6. 打开生成的Visual Studio解决方案文件进行构建
+```powershell
+build.ps1
+```
 
-#### 5.1.3. 运行示例
-编译后的可执行文件位于 `build\bin\Release\` 目录：
+Or use CMake GUI:
+1. Open CMake GUI
+2. Set source directory to project root directory
+3. Set build directory to `build`
+4. Click "Configure" and select Visual Studio version
+5. Click "Generate"
+6. Open the generated Visual Studio solution file for building
+
+#### 5.1.3. Run Examples
+Compiled executables are located in the `build\Release\` directory:
 ```cmd
-cd build\bin\Release
+cd build\examples\chat\chatbot\Release
 onesdk_chatbot_example.exe
 ```
 
-### 5.2. 使用MinGW-w64
+### 5.2. Using MinGW-w64
 
-#### 5.2.1. 配置示例参数
-同Visual Studio方式。
+#### 5.2.1. Configure Example Parameters
+Same as Visual Studio method.
 
-#### 5.2.2. 构建项目
+#### 5.2.2. Build Project
 ```cmd
 mkdir build
 cd build
@@ -164,131 +171,149 @@ cmake -G "MinGW Makefiles" ..
 mingw32-make
 ```
 
-#### 5.2.3. 运行示例
+#### 5.2.3. Run Examples
 ```cmd
 cd bin
 onesdk_chatbot_example.exe
 ```
 
-## 6. 构建选项
+## 6. Build Options
 
-您可以通过向 `build.bat` 传递CMake选项来自定义构建：
+You can customize the build by passing CMake options to `build.bat`:
 ```cmd
 build.bat -D<OPTION_NAME>=<VALUE>
 ```
+You can also pass CMake options through `build.ps1`:
 
-| 选项                      | 默认值 | 描述                                              |
-| --------------------------- | ------- | -------------------------------------------------------- |
-| `ONESDK_ENABLE_AI`          | `ON`    | 启用AI功能（文本、图像）。                        |
-| `ONESDK_ENABLE_AI_REALTIME` | `ON`    | 启用实时AI功能（如WebSocket音频）。    |
-| `ONESDK_ENABLE_IOT`         | `ON`    | 启用IoT功能（MQTT、OTA、物模型）。            |
-| `ONESDK_WITH_EXAMPLE`       | `ON`    | 构建示例应用程序。                              |
-| `ONESDK_WITH_TEST`          | `OFF`   | 构建单元测试。                                        |
-| `ONESDK_WITH_SHARED`        | `ON`    | 构建共享库。                                  |
-| `ONESDK_WITH_STATIC`        | `ON`    | 构建静态库。                                  |
-| `ONESDK_WITH_STRICT_MODE`   | `OFF`   | 启用编译器地址消毒器。                       |
-
-### 6.1. 示例构建命令
-```cmd
-# 仅构建AI功能
-build.bat -DONESDK_ENABLE_IOT=OFF
-
-# 构建调试版本
-build.bat -DCMAKE_BUILD_TYPE=Debug
-
-# 仅构建静态库
-build.bat -DONESDK_WITH_SHARED=OFF
+```powershell
+.\build.ps1 -CMakeOptions @("-D<OPTION_NAME1>=<VALUE1>", "-D<OPTION_NAME2>=<VALUE2>")
 ```
 
-## 7. 故障排除
+| Option                      | Default | Description                                              |
+| --------------------------- | ------- | -------------------------------------------------------- |
+| `ONESDK_ENABLE_AI`          | `ON`    | Enable AI functionality (text, image).                        |
+| `ONESDK_ENABLE_AI_REALTIME` | `ON`    | Enable real-time AI functionality (such as WebSocket audio).    |
+| `ONESDK_ENABLE_IOT`         | `ON`    | Enable IoT functionality (MQTT, OTA, thing model).            |
+| `ONESDK_WITH_EXAMPLE`       | `ON`    | Build example applications.                              |
+| `ONESDK_WITH_TEST`          | `OFF`   | Build unit tests.                                        |
+| `ONESDK_WITH_SHARED`        | `ON`    | Build shared libraries.                                  |
+| `ONESDK_WITH_STATIC`        | `ON`    | Build static libraries.                                  |
+| `ONESDK_WITH_STRICT_MODE`   | `OFF`   | Enable compiler address sanitizer.                       |
 
-### 7.1. 常见编译错误
+### 6.1. Example Build Commands
+
+#### CMD
+```cmd
+# Build AI functionality only
+build.bat -DONESDK_ENABLE_IOT=OFF
+
+# Build release version
+build.bat -DCMAKE_BUILD_TYPE=Release
+
+# Build static libraries only
+build.bat -DONESDK_WITH_SHARED=OFF
+```
+#### PowerShell
+
+```powershell
+# Release build with examples
+.\build.ps1 -BuildType Release -CMakeOptions @("-DONESDK_WITH_EXAMPLE=ON", "-DONESDK_WITH_TEST=ON")
+
+# Release build
+.\build.ps1 -BuildType Release -CMakeOptions @("-DONESDK_WITH_EXAMPLE=ON")
+
+# ESP32 source code extraction
+.\build.ps1 -CMakeOptions @("-DONESDK_EXTRACT_SRC=ON", "-DONESDK_WITH_TEST=OFF", "-DONESDK_WITH_EXAMPLE=OFF")
+```
+## 7. Troubleshooting
+
+### 7.1. Common Compilation Errors
 
 #### 7.1.1. `fatal error: 'openssl/ssl.h' file not found`
-**解决方案**:
-1. 安装OpenSSL并设置环境变量：
+**Solution**:
+1. Install OpenSSL and set environment variables:
    ```cmd
    set OPENSSL_ROOT_DIR=C:\OpenSSL-Win64
    ```
-2. 或者使用vcpkg安装：
+2. Or install using vcpkg:
    ```cmd
    vcpkg install openssl:x64-windows
    ```
 
 #### 7.1.2. `LNK1104: cannot open file 'ws2_32.lib'`
-**解决方案**:
-确保安装了Windows SDK，并在Visual Studio安装器中选中了"Windows 10/11 SDK"。
+**Solution**:
+Ensure Windows SDK is installed and "Windows 10/11 SDK" is selected in Visual Studio installer.
 
 #### 7.1.3. `CMake Error: Could not find a package configuration file`
-**解决方案**:
-1. 确保CMake版本为3.10或更高
-2. 检查是否所有依赖库都已正确安装
+**Solution**:
+1. Ensure CMake version is 3.10 or higher
+2. Check if all dependency libraries are properly installed
 
-### 7.2. 运行时错误
+### 7.2. Runtime Errors
 
 #### 7.2.1. `SSL error: self-signed certificate in certificate chain`
-**解决方案**:
-1. 验证连接和证书：
+**Solution**:
+1. Verify connection and certificates:
    ```cmd
    curl https://iot-cn-shanghai.iot.volces.com
    ```
-2. 如果失败，更新系统的CA存储
+2. If it fails, update the system's CA store
 
 #### 7.2.2. `The dynamic register switch of product is not turned on`
-**解决方案**:
-对于"按类型"认证，确保在IoT控制台中为产品启用了"动态注册"。
+**Solution**:
+For "by type" authentication, ensure "Dynamic Registration" is enabled for the product in the IoT console.
 
 #### 7.2.3. `No access to model xxxxxxx`
-**解决方案**:
-在控制台中转到 `IoT Platform -> AI Services -> Model Configuration`，并将所需的AI模型添加到您的产品中。
+**Solution**:
+In the console, go to `IoT Platform -> AI Services -> Model Configuration` and add the required AI models to your product.
 
-### 7.3. 性能优化
+### 7.3. Performance Optimization
 
-#### 7.3.1. 并行构建
-使用多核构建以加快编译速度：
+#### 7.3.1. Parallel Building
+Use multi-core building to speed up compilation:
 ```cmd
 build.bat --parallel 8
 ```
 
-#### 7.3.2. 增量构建
-避免清理构建目录以利用增量编译：
+#### 7.3.2. Incremental Building
+Avoid cleaning build directory to leverage incremental compilation:
 ```cmd
 build.bat
 ```
 
-## 8. 开发工具集成
+## 8. Development Tool Integration
 
 ### 8.1. Visual Studio Code
-1. 安装C/C++扩展
-2. 安装CMake Tools扩展
-3. 打开项目文件夹
-4. 使用Ctrl+Shift+P打开命令面板，选择"CMake: Configure"
+1. Install C/C++ extension
+2. Install CMake Tools extension
+3. Open project folder
+4. Use Ctrl+Shift+P to open command palette and select "CMake: Configure"
 
 ### 8.2. CLion
-1. 打开项目文件夹
-2. CLion会自动检测CMakeLists.txt
-3. 配置工具链为Visual Studio或MinGW
+1. Open project folder
+2. CLion will automatically detect CMakeLists.txt
+3. Configure toolchain as Visual Studio or MinGW
 
-## 9. 调试
+## 9. Debugging
 
-### 9.1. Visual Studio调试
-1. 在Visual Studio中打开生成的解决方案
-2. 设置断点
-3. 按F5开始调试
+### 9.1. Visual Studio Debugging
+1. Open the generated solution in Visual Studio
+2. Set breakpoints
+3. Press F5 to start debugging
 
-### 9.2. 命令行调试
+### 9.2. Command Line Debugging
 ```cmd
-# 使用GDB (MinGW)
+# Using GDB (MinGW)
 gdb onesdk_chatbot_example.exe
 
-# 使用Visual Studio调试器
+# Using Visual Studio debugger
 devenv onesdk_chatbot_example.exe
 ```
 
-## 10. 相关链接
+## 10. Related Links
 
-- [火山引擎IoT平台](https://www.volcengine.com/docs/6893/1455924)
-- [AI网关](https://www.volcengine.com/docs/6893/1263412)
-- [CMake官方文档](https://cmake.org/documentation/)
-- [Visual Studio文档](https://docs.microsoft.com/visualstudio/)
-- [MinGW-w64文档](https://www.mingw-w64.org/documentation/) 
+- [Volcengine IoT Platform](https://www.volcengine.com/docs/6893/1455924)
+- [AI Gateway](https://www.volcengine.com/docs/6893/1263412)
+- [CMake Official Documentation](https://cmake.org/documentation/)
+- [Visual Studio Documentation](https://docs.microsoft.com/visualstudio/)
+- [MinGW-w64 Documentation](https://www.mingw-w64.org/documentation/)
