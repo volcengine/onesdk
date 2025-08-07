@@ -22,10 +22,6 @@ OneSDK现在完全支持在Windows平台上进行构建和开发，包括：
 - `docs/develop_windows.md` - 详细的Windows开发指南
 - `WINDOWS_BUILD_SUPPORT.md` - 本文档
 
-### 工具脚本
-- `scripts/update_windows_support.py` - 批量更新示例CMakeLists.txt
-- `scripts/test_windows_build.py` - Windows构建环境检查
-- `scripts/test_cmake_config.py` - CMake配置测试
 
 ## 修改的文件
 
@@ -79,7 +75,7 @@ build.bat --parallel 8
 ### 1. 环境要求
 - Windows 10 或更高版本
 - Visual Studio 2019/2022 或 MinGW-w64
-- CMake 3.10+
+- CMake 3.10+ 但不高于4.x
 - Git
 
 ### 2. 构建步骤
@@ -89,9 +85,13 @@ git clone --recursive https://github.com/volcengine/onesdk.git
 cd onesdk
 
 # 使用Visual Studio构建（推荐）
-build.bat
+> 假设 C:\Program Files\OpenSSL-Win64\ 是openssl的安装路径
+set OPENSSL_ROOT_DIR=C:\Program Files\OpenSSL-Win64\
+.\build.bat
 
 # 或使用PowerShell脚本
+> 假设 C:\Program Files\OpenSSL-Win64\ 是openssl的安装路径
+$Env:OPENSSL_ROOT_DIR = "C:\Program Files\OpenSSL-Win64\"
 .\build.ps1
 
 # 或使用MinGW-w64
@@ -103,20 +103,8 @@ mingw32-make
 
 ### 3. 运行示例
 ```cmd
-cd build\bin\Release
+cd build\examples\chat\chatbot\Release
 .\onesdk_chatbot_example.exe
-```
-
-## 环境检查
-
-运行环境检查脚本：
-```cmd
-python scripts/test_windows_build.py
-```
-
-运行CMake配置测试：
-```cmd
-python scripts/test_cmake_config.py
 ```
 
 ## 故障排除

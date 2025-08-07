@@ -31,29 +31,36 @@ for /f "tokens=1,2 delims=." %%a in ("%CMAKE_VERSION%") do (
     set CMAKE_MINOR=%%b
 )
 
-
-
-
+REM Convert minor version to number for comparison
+set /a CMAKE_MINOR_NUM=%CMAKE_MINOR%
 
 REM Check version compatibility
 if %CMAKE_MAJOR%==3 (
-    if %CMAKE_MINOR% geq 10 (
+    if %CMAKE_MINOR_NUM% geq 10 (
         echo CMake version is compatible (3.x)
+        goto :version_check_done
     ) else (
         echo Warning: CMake version %CMAKE_VERSION% is below 3.10
         echo Minimum recommended: 3.10
         echo Continuing with build...
+        goto :version_check_done
     )
-) else if %CMAKE_MAJOR% geq 4 (
-    echo Warning: CMake version %CMAKE_VERSION% is 4.0 or above
+) else if %CMAKE_MAJOR%==4 (
+    echo Warning: CMake version %CMAKE_VERSION% is 4.x
     echo This may cause compatibility issues with cJSON
-    echo Recommended: Use CMake 3.x for best compatibility
+    echo Recommended: Use CMake 3.26.x for best compatibility
     echo Continuing with build...
+    goto :version_check_done
+) else if %CMAKE_MAJOR% gtr 4 (
+    echo Error: CMake version %CMAKE_VERSION% is too new. Maximum supported: 4.x
+    echo Please use CMake 3.10-4.x for compatibility
+    exit /b 1
 ) else (
-    echo Warning: CMake version %CMAKE_VERSION% is below 3.10
-    echo Minimum recommended: 3.10
-    echo Continuing with build...
+    echo Error: CMake version %CMAKE_VERSION% is too old. Minimum required: 3.10
+    exit /b 1
 )
+
+:version_check_done
 
 REM Check if clean-build parameter is provided
 set CLEAN_BUILD=0
@@ -99,8 +106,8 @@ echo Build completed successfully!
 echo ========================================
 echo.
 echo Build artifacts are located in:
-echo   - Libraries: build\lib\
-echo   - Executables: build\bin\
+echo   - Libraries: build\Release\
+echo   - Executables: build\Release\
 echo   - Headers: build\include\
 echo.
 

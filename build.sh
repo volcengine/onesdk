@@ -17,8 +17,8 @@ check_cmake_version() {
     # Check if version is 3.x (major version 3, minor version >= 10)
     if [ "$cmake_major" -eq 3 ] && [ "$cmake_minor" -ge 10 ]; then
         echo "CMake version is compatible (3.x)"
-    elif [ "$cmake_major" -gt 3 ]; then
-        echo "Warning: CMake version $cmake_version is higher than 3.x"
+    elif [ "$cmake_major" -eq 4 ]; then
+        echo "Warning: CMake version $cmake_version is 4.x"
         echo "This may cause compatibility issues with cJSON"
         echo "Consider using CMake 3.26.x for best compatibility"
         read -p "Continue anyway? (y/N): " -n 1 -r
@@ -26,6 +26,10 @@ check_cmake_version() {
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             exit 1
         fi
+    elif [ "$cmake_major" -gt 4 ]; then
+        echo "Error: CMake version $cmake_version is too new. Maximum supported: 4.x"
+        echo "Please use CMake 3.10-4.x for compatibility"
+        exit 1
     else
         echo "Error: CMake version $cmake_version is too old. Minimum required: 3.10"
         exit 1

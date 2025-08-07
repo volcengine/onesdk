@@ -25,7 +25,7 @@
 - 通过MSYS2安装MinGW-w64工具链
 
 #### 1.2.3. CMake
-- **版本要求**: 3.10 或更高版本
+- **版本要求**: CMake 3.10+ 但不高于4.x
 - **安装方式**:
   - 通过Visual Studio安装器安装
   - 或从 [CMake官网](https://cmake.org/download/) 下载安装
@@ -58,7 +58,7 @@ set OPENSSL_ROOT_DIR=C:\OpenSSL-Win64
 set WINDOWS_SDK_PATH=C:\Program Files (x86)\Windows Kits\10
 ```
 
-### 2.2. 使用MinGW-w64
+### 2.2. 使用MinGW-w64（备选）
 
 #### 2.2.1. 安装MSYS2
 1. 下载并安装 [MSYS2](https://www.msys2.org/)
@@ -131,9 +131,16 @@ git submodule update --init --recursive
 ```
 
 #### 5.1.2. 构建项目
+
 在项目根目录运行：
+
 ```cmd
 build.bat
+```
+或者
+
+```powershell
+build.ps1
 ```
 
 或者使用CMake GUI：
@@ -145,9 +152,9 @@ build.bat
 6. 打开生成的Visual Studio解决方案文件进行构建
 
 #### 5.1.3. 运行示例
-编译后的可执行文件位于 `build\bin\Release\` 目录：
+编译后的可执行文件位于 `build\Release\` 目录：
 ```cmd
-cd build\bin\Release
+cd build\examples\chat\chatbot\Release
 onesdk_chatbot_example.exe
 ```
 
@@ -176,6 +183,11 @@ onesdk_chatbot_example.exe
 ```cmd
 build.bat -D<OPTION_NAME>=<VALUE>
 ```
+也可以通过`build.ps1` 传递CMake选项
+
+```powershell
+.\build.ps1 -CMakeOptions @("-D<OPTION_NAME1>=<VALUE1>", "-D<OPTION_NAME2>=<VALUE2>")
+```
 
 | 选项                      | 默认值 | 描述                                              |
 | --------------------------- | ------- | -------------------------------------------------------- |
@@ -189,17 +201,30 @@ build.bat -D<OPTION_NAME>=<VALUE>
 | `ONESDK_WITH_STRICT_MODE`   | `OFF`   | 启用编译器地址消毒器。                       |
 
 ### 6.1. 示例构建命令
+
+#### CMD
 ```cmd
 # 仅构建AI功能
 build.bat -DONESDK_ENABLE_IOT=OFF
 
-# 构建调试版本
-build.bat -DCMAKE_BUILD_TYPE=Debug
+# 构建发布版本
+build.bat -DCMAKE_BUILD_TYPE=Release
 
 # 仅构建静态库
 build.bat -DONESDK_WITH_SHARED=OFF
 ```
+#### PowerShell
 
+```powershell
+# 发布构建和示例
+.\build.ps1 -BuildType Release -CMakeOptions @("-DONESDK_WITH_EXAMPLE=ON", "-DONESDK_WITH_TEST=ON")
+
+# 发布构建
+.\build.ps1 -BuildType Release -CMakeOptions @("-DONESDK_WITH_EXAMPLE=ON")
+
+# ESP32源码提取
+.\build.ps1 -CMakeOptions @("-DONESDK_EXTRACT_SRC=ON", "-DONESDK_WITH_TEST=OFF", "-DONESDK_WITH_EXAMPLE=OFF")
+```
 ## 7. 故障排除
 
 ### 7.1. 常见编译错误
