@@ -17,14 +17,20 @@ jobs:
 
     - name: Install dependencies
       run: |
+        set -e
         sudo apt-get update
-        sudo apt-get install -y build-essential libssl-dev
-        # Install CMake 3.x version for cJSON compatibility
-        wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo apt-key add -
-        sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-        sudo apt-get update
-        sudo apt-get install -y cmake=3.26.*
-        sudo apt-mark hold cmake
+        sudo apt-get install -y build-essential libssl-dev git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake
+        # Install CMake 3.31.6 for better compatibility if not already installed
+        cmake_version=$(cmake --version | head -n1 | cut -d' ' -f3)
+        cmake_major=$(echo $cmake_version | cut -d'.' -f1)
+        cmake_minor=$(echo $cmake_version | cut -d'.' -f2)
+        if [ "$cmake_major" -lt 3 ] || ([ "$cmake_major" -eq 3 ] && [ "$cmake_minor" -lt 10 ]); then
+          wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc | sudo apt-key add -
+          sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+          sudo apt-get update
+          sudo apt-get install -y cmake=3.31.*
+          sudo apt-mark hold cmake
+        fi
 
     - name: Get version from tag
       id: get_version
@@ -32,14 +38,22 @@ jobs:
 
     - name: Build release version
       run: |
+        set -e
         ./build.sh -DCMAKE_BUILD_TYPE=release -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
 
     - name: Extract source files
       run: |
-        ./build.sh -DONESDK_EXTRACT_SRC=ON
+        set -e
+        ./build.sh -DONESDK_EXTRACT_SRC=ON -DONESDK_WITH_TEST=OFF -DONESDK_WITH_EXAMPLE=OFF
+
+    - name: Copy source files for ESP32 examples
+      run: |
+        set -e
+        bash ./scripts/copy_onesdk_src.sh
 
     - name: Create release package
       run: |
+        set -e
         mkdir -p release
         cp -r build/output release/
         cp -r build/bin release/
@@ -47,15 +61,36 @@ jobs:
         cp README.md release/
         cp README.zh_CN.md release/
         cp docs/develop.md release/
+        # Include ESP32 examples
+        cp -r examples/onesdk_esp32 release/
+        cp -r examples/onesdk_esp32_audio release/
+        # Include build scripts
+        cp build.sh release/
+        cp build.bat release/
+        cp build.ps1 release/
+        cp CMakeLists.txt release/
+        # Include patch file
+        cp libwebsockets-v4.3.patch release/
+        # Include components file
+        cp components_onesdk.txt release/
+        # Include external libs for ESP32
+        cp -r external_libs/cJson release/
+        # Create a simple build script for ESP32
+        echo '#!/bin/bash' > release/build_esp32.sh
+        echo 'cd examples/onesdk_esp32' >> release/build_esp32.sh
+        echo 'idf.py set-target esp32s3' >> release/build_esp32.sh
+        echo 'idf.py build' >> release/build_esp32.sh
+        chmod +x release/build_esp32.sh
         tar -czf onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz release/
 
     - name: Create Release
-      uses: actions/create-release@v1
+      id: create_release
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ steps.get_version.outputs.VERSION }}
-        release_name: OneSDK ${{ steps.get_version.outputs.VERSION }}
+        name: OneSDK ${{ steps.get_version.outputs.VERSION }}
         body: |
           ## OneSDK ${{ steps.get_version.outputs.VERSION }}
           
@@ -63,11 +98,13 @@ jobs:
           - AI functionality improvements
           - IoT device management enhancements
           - Bug fixes and stability improvements
+          - ESP32 platform support
           
           ### Downloads
           - Source code and examples
           - Pre-built binaries for multiple platforms
           - Documentation and development guides
+          - ESP32 example projects
           
           ### Supported Platforms
           - Linux (amd64/arm64)
@@ -81,15 +118,13 @@ jobs:
           cd onesdk
           ./build.sh
           ```
+          
+          ### ESP32 Development
+          ```bash
+          cd examples/onesdk_esp32
+          idf.py set-target esp32s3
+          idf.py build
+          ```
         draft: false
         prerelease: false
-
-    - name: Upload Release Assets
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz
-        asset_name: onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz
-        asset_content_type: application/gzip 
+        files: onesdk-${{ steps.get_version.outputs.VERSION }}.tar.gz 
