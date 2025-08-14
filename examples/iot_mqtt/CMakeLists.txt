@@ -33,5 +33,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     onesdk_shared
     websockets_shared
 )
-
-            ${PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PLATFORM_LIBS})

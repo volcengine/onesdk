@@ -52,7 +52,7 @@ jobs:
         OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
         OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
       run: |
-        ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
+        ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF -DONESDK_WITH_EXAMPLE_EXTRA=ON
 
   # macOS Build and Test
   macos-build:
@@ -97,7 +97,7 @@ jobs:
         OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
         OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
       run: |
-        ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF
+        ./build.sh -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_TEST=OFF -DONESDK_WITH_EXAMPLE_EXTRA=ON
 
   # Windows Build
   windows-build:
@@ -132,7 +132,7 @@ jobs:
         OPENSSL_LIBRARIES: C:/Program Files/OpenSSL/lib
         OPENSSL_INCLUDE_DIR: C:/Program Files/OpenSSL/include
       run: |
-        build.bat -DCMAKE_BUILD_TYPE=Debug -DONESDK_WITH_EXAMPLE=ON
+        build.bat -DCMAKE_BUILD_TYPE=Debug -DONESDK_WITH_EXAMPLE=ON -DONESDK_WITH_EXAMPLE_EXTRA=ON
 
   # ESP32 Build (using ESP-IDF)
   esp32-build:

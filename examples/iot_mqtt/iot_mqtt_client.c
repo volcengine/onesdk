@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "iot_mqtt.h"
+#include "onesdk.h"
 #include "iot_log.h"
 
 #ifdef _WIN32

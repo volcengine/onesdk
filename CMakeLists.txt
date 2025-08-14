@@ -333,8 +333,8 @@ if (ONESDK_WITH_EXAMPLE)
 endif() # ONESDK_WITH_EXAMPLE
 
 if (ONESDK_WITH_EXAMPLE_EXTRA)
-	# add_subdirectory("examples/iot_dynamic_register")
-	add_subdirectory("examples/aigw_auth_client")
+	add_subdirectory("examples/iot_dynamic_register")
+	# add_subdirectory("examples/aigw_auth_client")
 	add_subdirectory("examples/raw_http_chat")
 	add_subdirectory("examples/http")
 if(ONESDK_ENABLE_IOT)

@@ -41,4 +41,4 @@ endif()
 
 target_link_libraries(iot_dynamic_register PRIVATE onesdk_shared)
 
-            ${PLATFORM_LIBS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${PLATFORM_LIBS})

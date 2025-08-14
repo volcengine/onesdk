@@ -47,12 +47,12 @@ endif()
 
     target_link_libraries(${PROJECT_NAME}
             onesdk cjson
-            ${LIBWEBSOCKETS_DEP_LIBS})
+            ${LIBWEBSOCKETS_DEP_LIBS}
             ${PLATFORM_LIBS})
 else()
     target_link_libraries(${PROJECT_NAME}
             onesdk_shared cjson
-            ${LIBWEBSOCKETS_DEP_LIBS})
+            ${LIBWEBSOCKETS_DEP_LIBS}
             ${PLATFORM_LIBS})
     add_dependencies(${PROJECT_NAME}
             websockets_shared)
