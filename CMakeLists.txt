@@ -26,7 +26,6 @@ option(ONESDK_WITH_TEST "Build onesdk unit tests" OFF)
 option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
 option(ONESDK_WITH_STRICT_MODE "Build onesdk with ADDRESS SANTITIZE mode" OFF)
-option(ONESDK_WITH_EXAMPLE_EXTRA "Build extra examples, for internal use only" OFF)
 
 # Generate the onesdk_config.h that includes all the public compilation settings.
 configure_file(
@@ -332,16 +331,6 @@ if (ONESDK_WITH_EXAMPLE)
 	endif() # ONESDK_ENABLE_IOT
 endif() # ONESDK_WITH_EXAMPLE
 
-if (ONESDK_WITH_EXAMPLE_EXTRA)
-	# add_subdirectory("examples/iot_dynamic_register")
-	add_subdirectory("examples/aigw_auth_client")
-	add_subdirectory("examples/raw_http_chat")
-	add_subdirectory("examples/http")
-if(ONESDK_ENABLE_IOT)
-	add_subdirectory("examples/iot_mqtt")
-endif()
-
-endif()
 
 if (ONESDK_WITH_TEST AND NOT APPLE)
     enable_language(CXX)
