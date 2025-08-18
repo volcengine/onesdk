@@ -22,7 +22,7 @@
 
 #define TAG_ONESDK "onesdk"
 
-int onesdk_init(onesdk_ctx_t * ctx, const onesdk_config_t *config) {
+int onesdk_init(onesdk_ctx_t * ctx, onesdk_config_t *config) {
 #ifdef ONESDK_ENABLE_IOT
     iot_log_init("");
 #endif
@@ -53,6 +53,7 @@ int onesdk_init(onesdk_ctx_t * ctx, const onesdk_config_t *config) {
         return ret;
     }
     ctx->iot_basic_ctx = iot_basic_ctx;
+    config->mqtt_config->basic_config = ctx->iot_basic_ctx->config;
 #if defined(ONESDK_ENABLE_AI) || defined(ONESDK_ENABLE_AI_REALTIME)
     // fetch llm config
     ret = onesdk_fetch_config(ctx);

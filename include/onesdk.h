@@ -118,7 +118,7 @@ typedef struct {
 int onesdk_fetch_config(onesdk_ctx_t *ctx);
 
 // common interfaces
-int onesdk_init(onesdk_ctx_t *, const onesdk_config_t *config);
+int onesdk_init(onesdk_ctx_t *, onesdk_config_t *config);
 
 int onesdk_connect(onesdk_ctx_t *ctx);
 
