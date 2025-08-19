@@ -53,7 +53,6 @@ int onesdk_init(onesdk_ctx_t * ctx, onesdk_config_t *config) {
         return ret;
     }
     ctx->iot_basic_ctx = iot_basic_ctx;
-    config->mqtt_config->basic_config = ctx->iot_basic_ctx->config;
 #if defined(ONESDK_ENABLE_AI) || defined(ONESDK_ENABLE_AI_REALTIME)
     // fetch llm config
     ret = onesdk_fetch_config(ctx);
@@ -132,6 +131,7 @@ int onesdk_init(onesdk_ctx_t * ctx, onesdk_config_t *config) {
         LOGI(TAG_ONESDK, "define ONESDK_ENABLE_IOT but mqtt_config is NULL, won't init mqtt");
         return VOLC_OK;  // ignore mqtt_config is NULL cas
     }
+    config->mqtt_config->basic_config = ctx->iot_basic_ctx->config;
     // init iot_mqtt
     iot_mqtt_ctx_t *iot_mqtt_ctx = malloc(sizeof(iot_mqtt_ctx_t));
     if (NULL == iot_mqtt_ctx) {
