@@ -22,7 +22,7 @@
 
 #define TAG_ONESDK "onesdk"
 
-int onesdk_init(onesdk_ctx_t * ctx, const onesdk_config_t *config) {
+int onesdk_init(onesdk_ctx_t * ctx, onesdk_config_t *config) {
 #ifdef ONESDK_ENABLE_IOT
     iot_log_init("");
 #endif
@@ -131,6 +131,7 @@ int onesdk_init(onesdk_ctx_t * ctx, const onesdk_config_t *config) {
         LOGI(TAG_ONESDK, "define ONESDK_ENABLE_IOT but mqtt_config is NULL, won't init mqtt");
         return VOLC_OK;  // ignore mqtt_config is NULL cas
     }
+    config->mqtt_config->basic_config = ctx->iot_basic_ctx->config;
     // init iot_mqtt
     iot_mqtt_ctx_t *iot_mqtt_ctx = malloc(sizeof(iot_mqtt_ctx_t));
     if (NULL == iot_mqtt_ctx) {
