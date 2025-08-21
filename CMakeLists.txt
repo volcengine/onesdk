@@ -27,8 +27,26 @@ option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
 option(ONESDK_WITH_STRICT_MODE "Build onesdk with ADDRESS SANTITIZE mode" OFF)
 # 添加预编译库支持开关
-option(ONESDK_USE_PREBUILT_LIBS "Use prebuilt libraries from onesdk/libs" ON)
+option(ONESDK_USE_PREBUILT_LIBS "Use prebuilt libraries from onesdk/libs" OFF)
 
+
+# 定义预编译库名称
+set(LIBWEBSOCKETS_LIB websockets)
+set(ONESDK_DEP_LIBS "")
+
+
+if(ONESDK_USE_PREBUILT_LIBS)
+	message(STATUS "ONESDK_USE_PREBUILT_LIBS is to ${ONESDK_USE_PREBUILT_LIBS}, override with ONESDK_WITH_STATIC=ON, ONESDK_WITH_SHARED=OFF")
+	set(OPENSSL_LIBS ssl crypto)
+	list(APPEND ONESDK_DEP_LIBS ${OPENSSL_LIBS})
+	set(ONESDK_WITH_SHARED OFF)
+	set(ONESDK_WITH_STATIC ON)
+endif()
+
+if(ONESDK_WITH_STATIC)
+	list(APPEND ONESDK_DEP_LIBS ${LIBWEBSOCKETS_LIB})
+	list(APPEND ONESDK_DEP_LIBS cjson)
+endif()
 # Generate the onesdk_config.h that includes all the public compilation settings.
 configure_file(
        "${PROJECT_SOURCE_DIR}/cmake/onesdk_config.h.in"
@@ -146,10 +164,6 @@ if(ONESDK_USE_PREBUILT_LIBS)
     include_directories("${PREBUILT_LIBS_DIR}/include")
     # 预编译库文件路径
     link_directories("${PREBUILT_LIBS_DIR}")
-    
-    # 定义预编译库名称
-    set(LIBWEBSOCKETS_LIB websockets)
-    set(OPENSSL_LIBS ssl crypto)
     
     # 仍然从源码编译cJson
     add_subdirectory(external_libs/cJson)
