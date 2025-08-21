@@ -26,6 +26,8 @@ option(ONESDK_WITH_TEST "Build onesdk unit tests" OFF)
 option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
 option(ONESDK_WITH_STRICT_MODE "Build onesdk with ADDRESS SANTITIZE mode" OFF)
+// 添加预编译库支持开关
+option(ONESDK_USE_PREBUILT_LIBS "Use prebuilt libraries from onesdk/libs" OFF)
 
 # Generate the onesdk_config.h that includes all the public compilation settings.
 configure_file(
@@ -109,15 +111,21 @@ message(STATUS "BUILD PLATFORM: ${BUILD_PLATFORM}")
 
 # Add include and external_libs/include to header file search path
 include_directories(
-		${PROJECT_SOURCE_DIR}/include
-		${PROJECT_SOURCE_DIR}/include/iot
-		${PROJECT_SOURCE_DIR}/src
-		${PROJECT_SOURCE_DIR}/platform
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/iot
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/platform
+    ${PROJECT_BINARY_DIR}/include
+)
+
+# 条件性添加头文件路径
+if(NOT ONESDK_USE_PREBUILT_LIBS)
+    include_directories(
         ${PROJECT_SOURCE_DIR}/external_libs/libwebsockets/include
         ${PROJECT_SOURCE_DIR}/external_libs/cJson
         ${PROJECT_BINARY_DIR}/external_libs/libwebsockets
-		${PROJECT_BINARY_DIR}/include
-)
+    )
+endif()
 
 # Platform specific include directories
 if(BUILD_PLATFORM STREQUAL "windows")
@@ -145,7 +153,27 @@ endif()
 if (ONESDK_WITH_EXAMPLE)
 	set(BUILD_TYPE "debug")
 endif()
-add_subdirectory(external_libs)
+# 修改外部库依赖逻辑
+if(ONESDK_USE_PREBUILT_LIBS)
+    # 使用预编译库
+    set(PREBUILT_LIBS_DIR "${PROJECT_SOURCE_DIR}/libs")
+    message(STATUS "Using prebuilt libraries from ${PREBUILT_LIBS_DIR}")
+    
+    # 预编译库头文件路径
+    include_directories("${PREBUILT_LIBS_DIR}/include")
+    # 预编译库文件路径
+    link_directories("${PREBUILT_LIBS_DIR}/lib")
+    
+    # 定义预编译库名称
+    set(LIBWEBSOCKETS_LIB websockets)
+    set(OPENSSL_LIBS ssl crypto)
+    
+    # 仍然从源码编译cJson
+    add_subdirectory(external_libs/cJson)
+else()
+    # 原有逻辑：从源码编译所有外部库
+    add_subdirectory(external_libs)
+endif()
 
 # Add CoreFoundation framework on macOS platform
 if(BUILD_PLATFORM STREQUAL "macos")
