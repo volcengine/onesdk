@@ -77,3 +77,7 @@ dependencies.lock
 .DS_Store
 ./external_libs/cJson/
 ./external_libs/libwebsockets/
+# prebuilt libs
+libs/*.a
+libs/*.so
+libs/*.dylib

@@ -42,9 +42,10 @@ else()
     set(PLATFORM_LIBS "")
 endif()
 
-if (websockets)
+if (ONESDK_WITH_STATIC)
     target_link_libraries(${PROJECT_NAME}
-            onesdk cjson
+            onesdk
+            ${ONESDK_DEP_LIBS}
             ${LIBWEBSOCKETS_DEP_LIBS}
             ${PLATFORM_LIBS})
 else()

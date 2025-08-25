@@ -26,7 +26,14 @@ else()
 endif()
 
 
-target_link_libraries(${PROJECT_NAME} PRIVATE 
-    onesdk_shared
-    websockets_shared
-    ${PLATFORM_LIBS})
+if(ONESDK_WITH_STATIC)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        onesdk
+        ${ONESDK_DEP_LIBS}
+        ${PLATFORM_LIBS})
+else()
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+        onesdk_shared
+        websockets_shared
+        ${PLATFORM_LIBS})
+endif()

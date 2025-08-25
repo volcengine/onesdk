@@ -26,7 +26,27 @@ option(ONESDK_WITH_TEST "Build onesdk unit tests" OFF)
 option(ONESDK_WITH_SHARED "Build shared lib for onesdk" ON)
 option(ONESDK_WITH_STATIC "Build static lib for onesdk" ON)
 option(ONESDK_WITH_STRICT_MODE "Build onesdk with ADDRESS SANTITIZE mode" OFF)
+# 添加预编译库支持开关
+option(ONESDK_USE_PREBUILT_LIBS "Use prebuilt libraries from onesdk/libs" OFF)
 
+
+# 定义预编译库名称
+set(LIBWEBSOCKETS_LIB websockets)
+set(ONESDK_DEP_LIBS "")
+
+
+if(ONESDK_USE_PREBUILT_LIBS)
+	message(STATUS "ONESDK_USE_PREBUILT_LIBS is to ${ONESDK_USE_PREBUILT_LIBS}, override with ONESDK_WITH_STATIC=ON, ONESDK_WITH_SHARED=OFF")
+	set(OPENSSL_LIBS ssl crypto)
+	list(APPEND ONESDK_DEP_LIBS ${OPENSSL_LIBS})
+	set(ONESDK_WITH_SHARED OFF)
+	set(ONESDK_WITH_STATIC ON)
+endif()
+
+if(ONESDK_WITH_STATIC)
+	list(APPEND ONESDK_DEP_LIBS ${LIBWEBSOCKETS_LIB})
+	list(APPEND ONESDK_DEP_LIBS cjson)
+endif()
 # Generate the onesdk_config.h that includes all the public compilation settings.
 configure_file(
        "${PROJECT_SOURCE_DIR}/cmake/onesdk_config.h.in"
@@ -107,18 +127,7 @@ message(STATUS "PROJECT SRC DIR: ${PROJECT_SOURCE_DIR}")
 message(STATUS "PROJECT BIN DIR: ${PROJECT_BINARY_DIR}")
 message(STATUS "BUILD PLATFORM: ${BUILD_PLATFORM}")
 
-# Add include and external_libs/include to header file search path
-include_directories(
-		${PROJECT_SOURCE_DIR}/include
-		${PROJECT_SOURCE_DIR}/include/iot
-		${PROJECT_SOURCE_DIR}/src
-		${PROJECT_SOURCE_DIR}/platform
-        ${PROJECT_SOURCE_DIR}/external_libs/libwebsockets/include
-        ${PROJECT_SOURCE_DIR}/external_libs/cJson
-        ${PROJECT_BINARY_DIR}/external_libs/libwebsockets
-		${PROJECT_BINARY_DIR}/include
-)
-
+message(STATUS "ONESDK_USE_PREBUILT_LIBS: ${ONESDK_USE_PREBUILT_LIBS}")
 # Platform specific include directories
 if(BUILD_PLATFORM STREQUAL "windows")
     # Add Windows SDK paths if available
@@ -145,7 +154,25 @@ endif()
 if (ONESDK_WITH_EXAMPLE)
 	set(BUILD_TYPE "debug")
 endif()
-add_subdirectory(external_libs)
+# 修改外部库依赖逻辑
+if(ONESDK_USE_PREBUILT_LIBS)
+    # 使用预编译库
+    set(PREBUILT_LIBS_DIR "${PROJECT_SOURCE_DIR}/libs")
+    message(STATUS "Using prebuilt libraries from ${PREBUILT_LIBS_DIR}")
+    
+    # 预编译库头文件路径
+    include_directories("${PREBUILT_LIBS_DIR}/include")
+    # 预编译库文件路径
+    link_directories("${PREBUILT_LIBS_DIR}")
+    
+    # 仍然从源码编译cJson
+    add_subdirectory(external_libs/cJson)
+	# 仍然需要lws_config.h
+    # add_subdirectory(external_libs/libwebsockets)
+else()
+    # 原有逻辑：从源码编译所有外部库
+    add_subdirectory(external_libs)
+endif()
 
 # Add CoreFoundation framework on macOS platform
 if(BUILD_PLATFORM STREQUAL "macos")
@@ -165,6 +192,23 @@ endif()
 set(BUILD_TYPE "debug")
 
 file(GLOB SOURCE "${PROJECT_SOURCE_DIR}/src/*.c")
+
+
+
+# Add include and external_libs/include to header file search path
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/iot
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/platform
+    ${PROJECT_BINARY_DIR}/include
+)
+
+include_directories(
+	${PROJECT_SOURCE_DIR}/external_libs/libwebsockets/include
+	${PROJECT_SOURCE_DIR}/external_libs/cJson
+	${PROJECT_BINARY_DIR}/external_libs/libwebsockets
+)
 
 # source directory
 # aux_source_directory(src ONESDK_SRC_DIRS)
@@ -281,9 +325,12 @@ if (APPLE)
 	# Don't add the exact path to CoreFoundation as this would hardcode the SDK version
 	list(APPEND PLATFORM_LIBS dl Threads::Threads "-framework CoreFoundation")
 	list(APPEND PLATFORM_LIBS ${CMAKE_DL_LIBS})
-
-	target_link_libraries(${PROJECT_NAME} PUBLIC ${PLATFORM_LIBS})
-	target_link_libraries(${PROJECT_NAME}_shared PUBLIC ${PLATFORM_LIBS})
+	if(ONESDK_WITH_STATIC)
+		target_link_libraries(${PROJECT_NAME} PUBLIC ${PLATFORM_LIBS})
+	endif()
+	if(ONESDK_WITH_SHARED)
+		target_link_libraries(${PROJECT_NAME}_shared PUBLIC ${PLATFORM_LIBS})
+	endif()
 
 	# list (APPEND AWS_COMMON_OS_SRC "source/darwin/*.c") # OS specific includes
 	# list (APPEND AWS_COMMON_OS_SRC "source/platform_fallback_stubs/system_info.c")

@@ -39,16 +39,17 @@ add_executable(${PROJECT_NAME}
 )
 message("linking ${PROJECT_NAME} with websockets_shared = ${websockets_shared} libs  ${LIBWEBSOCKETS_DEP_LIBS}")
 
-if (websockets_static)
-# Platform-specific libraries
-if(BUILD_PLATFORM STREQUAL "windows")
-    set(PLATFORM_LIBS ws2_32 crypt32 iphlpapi)
-else()
-    set(PLATFORM_LIBS "")
-endif()
+if (ONESDK_WITH_STATIC)
+    # Platform-specific libraries
+    if(BUILD_PLATFORM STREQUAL "windows")
+        set(PLATFORM_LIBS ws2_32 crypt32 iphlpapi)
+    else()
+        set(PLATFORM_LIBS "")
+    endif()
 
-    target_link_libraries(${PROJECT_NAME}
-            onesdk cjson
+        target_link_libraries(${PROJECT_NAME}
+            onesdk
+            ${ONESDK_DEP_LIBS}
             ${LIBWEBSOCKETS_DEP_LIBS}
             ${PLATFORM_LIBS})
 else()
