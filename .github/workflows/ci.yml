@@ -253,13 +253,15 @@ jobs:
     - name: Create release artifacts
       run: |
         mkdir -p release
-        cp -r build/output release/
-        cp -r build/bin release/
+        cp -r build/output release/ || true
         cp -r include release/
+        # 查找所有.a/.so/.dylib文件并拷贝到release/lib
+        mkdir -p release/lib
+        find build -type f \( -name "*.a" -o -name "*.so" -o -name "*.dylib" \) -exec cp {} release/lib/ \;
         tar -czf onesdk-release.tar.gz release/
 
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
       with:
         name: onesdk-release
-        path: onesdk-release.tar.gz 
+        path: onesdk-release.tar.gz
