@@ -239,12 +239,36 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
                     }
                 }
             }
-            if (i == ctx->pending_pub_list->count) {
-                // 清空待发布列表
-                free(ctx->pending_pub_list->publish_params);
-                free(ctx->pending_pub_list->sent_list);
-                free(ctx->pending_pub_list);
-                ctx->pending_pub_list = NULL;
+            // Clean up sent QoS0 messages and compact the list
+            if (ctx->pending_pub_list) {
+                size_t new_count = 0;
+                for (i = 0; i < ctx->pending_pub_list->count; i++) {
+                    bool is_sent_qos0 = ctx->pending_pub_list->sent_list[i] &&
+                                        (ctx->pending_pub_list->publish_params[i].qos == QOS0);
+
+                    if (is_sent_qos0) {
+                        // Free resources for this sent QoS0 message
+                        free((void *)ctx->pending_pub_list->publish_params[i].topic);
+                        free((void *)ctx->pending_pub_list->publish_params[i].payload);
+                    } else {
+                        // Keep this message (either unsent or in-flight QoS1)
+                        if (new_count != i) {
+                            ctx->pending_pub_list->publish_params[new_count] = ctx->pending_pub_list->publish_params[i];
+                            ctx->pending_pub_list->sent_list[new_count] = ctx->pending_pub_list->sent_list[i];
+                        }
+                        new_count++;
+                    }
+                }
+
+                if (new_count < ctx->pending_pub_list->count) {
+                    ctx->pending_pub_list->count = new_count;
+                    if (ctx->pending_pub_list->count == 0) {
+                        free(ctx->pending_pub_list->publish_params);
+                        free(ctx->pending_pub_list->sent_list);
+                        free(ctx->pending_pub_list);
+                        ctx->pending_pub_list = NULL;
+                    }
+                }
             }
         }
 
@@ -253,9 +277,47 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
 
     case LWS_CALLBACK_MQTT_ACK:
         lwsl_info("%s: MQTT_ACK\n", __func__);
+        lws_pthread_mutex_lock(&ctx->pub_topic_mutex);
         if (ctx->waiting_for_puback) {
             ctx->waiting_for_puback = 0;
+
+            // Find and remove the acknowledged QoS1 message
+            if (ctx->pending_pub_list) {
+                int acked_idx = -1;
+                for (size_t i = 0; i < ctx->pending_pub_list->count; i++) {
+                    if (ctx->pending_pub_list->sent_list[i] &&
+                        ctx->pending_pub_list->publish_params[i].qos != QOS0) {
+                        acked_idx = i;
+                        break;
+                    }
+                }
+
+                if (acked_idx != -1) {
+                    // Free resources
+                    free((void *)ctx->pending_pub_list->publish_params[acked_idx].topic);
+                    free((void *)ctx->pending_pub_list->publish_params[acked_idx].payload);
+
+                    // Compact the list
+                    if ((size_t)acked_idx < ctx->pending_pub_list->count - 1) {
+                        memmove(&ctx->pending_pub_list->publish_params[acked_idx],
+                                &ctx->pending_pub_list->publish_params[acked_idx + 1],
+                                (ctx->pending_pub_list->count - acked_idx - 1) * sizeof(lws_mqtt_publish_param_t));
+                        memmove(&ctx->pending_pub_list->sent_list[acked_idx],
+                                &ctx->pending_pub_list->sent_list[acked_idx + 1],
+                                (ctx->pending_pub_list->count - acked_idx - 1) * sizeof(bool));
+                    }
+                    ctx->pending_pub_list->count--;
+
+                    if (ctx->pending_pub_list->count == 0) {
+                        free(ctx->pending_pub_list->publish_params);
+                        free(ctx->pending_pub_list->sent_list);
+                        free(ctx->pending_pub_list);
+                        ctx->pending_pub_list = NULL;
+                    }
+                }
+            }
         }
+        lws_pthread_mutex_unlock(&ctx->pub_topic_mutex);
         lws_callback_on_writable(wsi);
         break;
 
@@ -560,8 +622,8 @@ int iot_mqtt_publish(iot_mqtt_ctx_t *ctx, const char *topic, const uint8_t *payl
 finish:
     lws_pthread_mutex_unlock(&ctx->pub_topic_mutex);
     if (ctx->is_connected) {
-        // lwsl_err("ctx->wsi %p\n", ctx->wsi);
-        // lws_callback_on_writable(ctx->wsi);
+        lws_callback_on_writable(ctx->wsi);
+        lws_cancel_service(ctx->context);
     }
 
     return ret;
