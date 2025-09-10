@@ -145,6 +145,7 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
                 // 如果是重复的，则释放待处理列表中的 topic 内存并跳过
                 if (is_duplicate) {
                     free((void*)topic_map->topic); // 释放重复 topic 的内存
+                    topic_map->topic = NULL;
                     continue;
                 }
 
@@ -156,6 +157,7 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
                     lwsl_err("%s: realloc sub_topic_maps failed\n", __func__);
                     // 释放当前 topic_map 的 topic 内存，因为它无法被添加
                     free((void*)topic_map->topic);
+                    topic_map->topic = NULL;
                     // 这里不直接返回错误，允许处理剩余的 topic，但记录下内存问题
                     continue; // 继续处理下一个 topic
                 }
@@ -354,8 +356,9 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
     case LWS_CALLBACK_TIMER:
         lwsl_debug("timer\n");
         if (ctx->is_connected) {
-            lws_set_timer_usecs(wsi, 10*1000000);
+            lws_set_timer_usecs(wsi, ctx->config->ping_interval*1000000);
             lws_callback_on_writable(wsi);
+            lws_cancel_service(ctx->context);
         }
         break;
 
@@ -464,11 +467,44 @@ int iot_mqtt_init(iot_mqtt_ctx_t *ctx, iot_mqtt_config_t *config) {
 }
 
 void iot_mqtt_deinit(iot_mqtt_ctx_t *ctx) {
+    if (!ctx) {
+        return;
+    }
     aws_string_destroy_secure(ctx->config->username);
     aws_string_destroy_secure(ctx->config->password);
 
     if (ctx->context) {
         lws_context_destroy(ctx->context);
+    }
+
+    // Free subscribed topics
+    for (size_t i = 0; i < ctx->sub_topic_count; i++) {
+        free((void *)ctx->sub_topic_maps[i].topic);
+    }
+    free(ctx->sub_topic_maps);
+    ctx->sub_topic_maps = NULL;
+    ctx->sub_topic_count = 0;
+
+    // Free pending subscription list
+    if (ctx->pending_sub_list) {
+        for (size_t i = 0; i < ctx->pending_sub_list->count; i++) {
+            free((void *)ctx->pending_sub_list->topic_maps[i].topic);
+        }
+        free(ctx->pending_sub_list->topic_maps);
+        free(ctx->pending_sub_list);
+        ctx->pending_sub_list = NULL;
+    }
+
+    // Free pending publish list
+    if (ctx->pending_pub_list) {
+        for (size_t i = 0; i < ctx->pending_pub_list->count; i++) {
+            free((void *)ctx->pending_pub_list->publish_params[i].topic);
+            free((void *)ctx->pending_pub_list->publish_params[i].payload);
+        }
+        free(ctx->pending_pub_list->publish_params);
+        free(ctx->pending_pub_list->sent_list);
+        free(ctx->pending_pub_list);
+        ctx->pending_pub_list = NULL;
     }
 
     lws_pthread_mutex_destroy(&ctx->sub_topic_mutex);
@@ -574,31 +610,37 @@ int iot_mqtt_publish(iot_mqtt_ctx_t *ctx, const char *topic, const uint8_t *payl
     int ret = VOLC_OK;
 
     // 组装pub_param，放入pending_pub_list
-    lws_mqtt_publish_param_t *pub_param = malloc(sizeof(lws_mqtt_publish_param_t));
-    memset(pub_param, 0, sizeof(lws_mqtt_publish_param_t));
-    pub_param->topic = strdup(topic);
-    pub_param->topic_len = strlen(topic);
-    void* payload_byte = malloc(len);
-    if (payload_byte == NULL) {
-        // 内存分配失败，记录错误信息
-        lwsl_err("%s: Memory allocation failed for payload\n", __func__);
-        // 可以选择返回错误码或进行其他处理
+    lws_mqtt_publish_param_t pub_param;
+    memset(&pub_param, 0, sizeof(lws_mqtt_publish_param_t));
+    pub_param.topic = strdup(topic);
+    if (!pub_param.topic) {
+        lwsl_err("%s: Memory allocation failed for topic\n", __func__);
         return VOLC_ERR_MALLOC;
     }
-    memcpy(payload_byte, payload, len);
-    pub_param->payload = payload_byte;
-    pub_param->payload_len = len;
-    pub_param->qos = qos;
+    pub_param.topic_len = strlen(topic);
+
+    if (len > 0) {
+        pub_param.payload = malloc(len);
+        if (pub_param.payload == NULL) {
+            lwsl_err("%s: Memory allocation failed for payload\n", __func__);
+            free((void*)pub_param.topic);
+            return VOLC_ERR_MALLOC;
+        }
+        memcpy((void*)pub_param.payload, payload, len);
+    } else {
+        pub_param.payload = NULL;
+    }
+    
+    pub_param.payload_len = len;
+    pub_param.qos = qos;
 
     lws_pthread_mutex_lock(&ctx->pub_topic_mutex);
     if (ctx->pending_pub_list == NULL) {
         ctx->pending_pub_list = (iot_mqtt_pending_pub_list_t *)malloc(sizeof(iot_mqtt_pending_pub_list_t));
         if (ctx->pending_pub_list == NULL) {
-            // 内存分配失败，记录错误信息
             lwsl_err("%s: Memory allocation failed for pending_pub_list\n", __func__);
-            // 可以选择返回错误码或进行其他处理
             ret = VOLC_ERR_MALLOC;
-            goto finish;
+            goto finish_with_free;
         }
         ctx->pending_pub_list->publish_params = NULL;
         ctx->pending_pub_list->sent_list = NULL;
@@ -609,17 +651,38 @@ int iot_mqtt_publish(iot_mqtt_ctx_t *ctx, const char *topic, const uint8_t *payl
     if (ctx->pending_pub_list->count > 10) {
         ret = VOLC_ERR_MQTT_PUB;
         lwsl_err("%s: publish failed\n", __func__);
-        lws_pthread_mutex_unlock(&ctx->pub_topic_mutex);
-        goto finish;
+        goto finish_with_free;
     }
         
-    ctx->pending_pub_list->publish_params = (lws_mqtt_publish_param_t *)realloc(ctx->pending_pub_list->publish_params, (ctx->pending_pub_list->count + 1) * sizeof(lws_mqtt_publish_param_t));
-    ctx->pending_pub_list->publish_params[ctx->pending_pub_list->count] = *pub_param;
-    ctx->pending_pub_list->sent_list = (bool *)realloc(ctx->pending_pub_list->sent_list, (ctx->pending_pub_list->count + 1) * sizeof(bool));
+    lws_mqtt_publish_param_t *new_params = (lws_mqtt_publish_param_t *)realloc(ctx->pending_pub_list->publish_params, (ctx->pending_pub_list->count + 1) * sizeof(lws_mqtt_publish_param_t));
+    if (new_params == NULL) {
+        ret = VOLC_ERR_MALLOC;
+        goto finish_with_free;
+    }
+    ctx->pending_pub_list->publish_params = new_params;
+
+    bool *new_sent_list = (bool *)realloc(ctx->pending_pub_list->sent_list, (ctx->pending_pub_list->count + 1) * sizeof(bool));
+    if (new_sent_list == NULL) {
+        ret = VOLC_ERR_MALLOC;
+        goto finish_with_free;
+    }
+    ctx->pending_pub_list->sent_list = new_sent_list;
+    
+    ctx->pending_pub_list->publish_params[ctx->pending_pub_list->count] = pub_param;
     ctx->pending_pub_list->sent_list[ctx->pending_pub_list->count] = false;
     ctx->pending_pub_list->count++;
 
-finish:
+    lws_pthread_mutex_unlock(&ctx->pub_topic_mutex);
+    if (ctx->is_connected) {
+        lws_callback_on_writable(ctx->wsi);
+        lws_cancel_service(ctx->context);
+    }
+
+    return ret;
+
+finish_with_free:
+    free((void*)pub_param.topic);
+    free((void*)pub_param.payload);
     lws_pthread_mutex_unlock(&ctx->pub_topic_mutex);
     if (ctx->is_connected) {
         lws_callback_on_writable(ctx->wsi);
