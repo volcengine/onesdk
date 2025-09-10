@@ -113,6 +113,7 @@ int32_t tm_sub_custom_topic(void *handler, const char *topic_suffix) {
     aws_mem_release(dm_handle->allocator, topic);
     aws_string_destroy_secure(product_key);
     aws_string_destroy_secure(device_name);
+    aws_string_destroy_secure(topic_suffix_string);
 
     return 0;
 }

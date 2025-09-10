@@ -154,7 +154,7 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
                     (ctx->sub_topic_count + 1) * sizeof(iot_mqtt_topic_map_t));
                 if (new_sub_topic_maps == NULL) {
                     // realloc 失败，保留原有 sub_topic_maps
-                    lwsl_err("%s: realloc sub_topic_maps failed\n", __func__);
+                    lwsl_err("%s: realloc sub_topic_maps failed\\n", __func__);
                     // 释放当前 topic_map 的 topic 内存，因为它无法被添加
                     free((void*)topic_map->topic);
                     topic_map->topic = NULL;
@@ -563,19 +563,34 @@ static void _iot_mqtt_append_sub_topic(iot_mqtt_ctx_t *ctx, iot_mqtt_topic_map_t
     // 将topic_map存入待订阅列表
     if (ctx->pending_sub_list == NULL) {
         ctx->pending_sub_list = (iot_mqtt_pending_sub_list_t *)malloc(sizeof(iot_mqtt_pending_sub_list_t));
+        if (ctx->pending_sub_list == NULL) {
+            lws_pthread_mutex_unlock(&ctx->sub_topic_mutex);
+            return;
+        }
         ctx->pending_sub_list->topic_maps = NULL;
         ctx->pending_sub_list->count = 0;
     }
     // copy topic_map
-    iot_mqtt_topic_map_t *topic_map_copy = (iot_mqtt_topic_map_t *)malloc(sizeof(iot_mqtt_topic_map_t));
-    memset(topic_map_copy, 0, sizeof(iot_mqtt_topic_map_t));
-    topic_map_copy->topic = strdup(topic_map->topic);
-    topic_map_copy->message_callback = topic_map->message_callback;
-    topic_map_copy->event_callback = topic_map->event_callback;
-    topic_map_copy->user_data = topic_map->user_data;
-    topic_map_copy->qos = topic_map->qos;
-    ctx->pending_sub_list->topic_maps = (iot_mqtt_topic_map_t *)realloc(ctx->pending_sub_list->topic_maps, (ctx->pending_sub_list->count + 1) * sizeof(iot_mqtt_topic_map_t));
-    ctx->pending_sub_list->topic_maps[ctx->pending_sub_list->count] = *topic_map_copy;
+    iot_mqtt_topic_map_t topic_map_copy;
+    memset(&topic_map_copy, 0, sizeof(iot_mqtt_topic_map_t));
+    topic_map_copy.topic = strdup(topic_map->topic);
+    if (topic_map_copy.topic == NULL) {
+        lws_pthread_mutex_unlock(&ctx->sub_topic_mutex);
+        return;
+    }
+    topic_map_copy.message_callback = topic_map->message_callback;
+    topic_map_copy.event_callback = topic_map->event_callback;
+    topic_map_copy.user_data = topic_map->user_data;
+    topic_map_copy.qos = topic_map->qos;
+
+    iot_mqtt_topic_map_t *new_maps = (iot_mqtt_topic_map_t *)realloc(ctx->pending_sub_list->topic_maps, (ctx->pending_sub_list->count + 1) * sizeof(iot_mqtt_topic_map_t));
+    if (new_maps == NULL) {
+        free((void*)topic_map_copy.topic);
+        lws_pthread_mutex_unlock(&ctx->sub_topic_mutex);
+        return;
+    }
+    ctx->pending_sub_list->topic_maps = new_maps;
+    ctx->pending_sub_list->topic_maps[ctx->pending_sub_list->count] = topic_map_copy;
     ctx->pending_sub_list->count++;
     lws_pthread_mutex_unlock(&ctx->sub_topic_mutex);
 }

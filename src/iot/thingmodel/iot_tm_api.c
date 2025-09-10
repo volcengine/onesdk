@@ -342,6 +342,7 @@ int __s_tm_set_up_mqtt_topic(iot_tm_handler_t *iot_tm_handler, struct aws_string
         topic_mapping.message_callback = g_dm_recv_topic_mapping[i].func;
         topic_mapping.user_data = iot_tm_handler;
         if (topic_mapping.message_callback == NULL) {
+            aws_mem_release(iot_tm_handler->allocator, (void*)topic_mapping.topic);
             continue;
         }
         topic_mapping.qos = IOT_MQTT_QOS1;
