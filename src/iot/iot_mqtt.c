@@ -38,7 +38,6 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
     */ 
     struct lws_context *context = lws_get_context(wsi);
     iot_mqtt_ctx_t *ctx = (iot_mqtt_ctx_t *)lws_context_user(context);
-    ctx->wsi = wsi;
 
     switch (reason) {
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
@@ -62,7 +61,8 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
         ctx->waiting_for_suback = 0;
         lws_callback_on_writable(wsi);
         lws_set_timer_usecs(wsi, ctx->config->ping_interval*1000000);
-        
+        ctx->wsi = wsi;
+
         return 0;
 
     case LWS_CALLBACK_MQTT_SUBSCRIBED:
