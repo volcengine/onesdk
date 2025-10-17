@@ -13,7 +13,7 @@ message(STATUS "onesdk_esp32 srcs: ${ONESDK_ESP32_SRCS}")
 set(ONESDK_ESP32_DEPS onesdk)
 message(STATUS "onesdk_esp32 deps: ${ONESDK_ESP32_DEPS}")
 idf_component_register(SRCS  "${ONESDK_ESP32_SRCS}"
-                    PRIV_REQUIRES ${ONESDK_ESP32_DEPS}
+                    PRIV_REQUIRES ${ONESDK_ESP32_DEPS} wpa_supplicant
                     # INCLUDE_DIRS "../libwebsockets/include;${IDF_PATH}/components/spi_flash/include;${IDF_PATH}/components/nvs_flash/include")
                     INCLUDE_DIRS ".;${IDF_PATH}/components/spi_flash/include;${IDF_PATH}/components/nvs_flash/include")
 
