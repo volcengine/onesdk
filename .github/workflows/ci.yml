@@ -70,11 +70,13 @@ jobs:
     - name: Install dependencies
       run: |
         brew install openssl
-
-    - name: Setup CMake
-      uses: kitware/cmake-action@v1
-      with:
-        version: 3.26.x
+        # Install CMake 3.26.4 from Kitware
+        curl -L https://github.com/Kitware/CMake/releases/download/v3.26.4/cmake-3.26.4-macos-universal.dmg -o cmake.dmg
+        hdiutil attach cmake.dmg
+        sudo cp -R /Volumes/cmake-3.26.4-macos-universal/CMake.app /Applications/
+        sudo /Applications/CMake.app/Contents/bin/cmake-gui --install
+        hdiutil detach /Volumes/cmake-3.26.4-macos-universal
+        rm cmake.dmg
 
     - name: Configure and build
       env:
