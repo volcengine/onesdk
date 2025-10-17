@@ -3,12 +3,19 @@ set -e  # Exit on any error
 
 # Function to check CMake version
 check_cmake_version() {
-    if ! command -v cmake &> /dev/null; then
-        echo "Error: CMake is not installed!"
+    # Use CMAKE_PATH if provided, otherwise use default cmake command
+    if [ -n "$CMAKE_PATH" ]; then
+        CMAKE_CMD="$CMAKE_PATH/cmake"
+    else
+        CMAKE_CMD="cmake"
+    fi
+    
+    if ! command -v $CMAKE_CMD &> /dev/null; then
+        echo "Error: CMake is not installed at $CMAKE_CMD!"
         exit 1
     fi
     
-    cmake_version=$(cmake --version | head -n1 | cut -d' ' -f3)
+    cmake_version=$($CMAKE_CMD --version | head -n1 | cut -d' ' -f3)
     cmake_major=$(echo $cmake_version | cut -d'.' -f1)
     cmake_minor=$(echo $cmake_version | cut -d'.' -f2)
     
@@ -48,8 +55,15 @@ fi
 mkdir -p build
 cd build
 
+# Use CMAKE_PATH if provided, otherwise use default cmake command
+if [ -n "$CMAKE_PATH" ]; then
+    CMAKE_CMD="$CMAKE_PATH/cmake"
+else
+    CMAKE_CMD="cmake"
+fi
+
 echo "Running cmake with arguments: $@"
-cmake $@ ..
+$CMAKE_CMD $@ ..
 if [ $? -ne 0 ]; then
     echo "CMake configuration failed!"
     exit 1

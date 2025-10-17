@@ -77,14 +77,16 @@ jobs:
         sudo /Applications/CMake.app/Contents/bin/cmake-gui --install
         hdiutil detach /Volumes/cmake-3.26.4-macos-universal
         rm cmake.dmg
-        export PATH="/Applications/CMake.app/Contents/bin:$PATH"
+        echo "CMAKE_PATH=/Applications/CMake.app/Contents/bin" >> $GITHUB_ENV
 
     - name: Configure and build
       env:
         OPENSSL_ROOT_DIR: /opt/homebrew/opt/openssl@3
         OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
         OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
+        CMAKE_PATH: /Applications/CMake.app/Contents/bin
       run: |
+        export PATH="/Applications/CMake.app/Contents/bin:$PATH"
         ./build.sh -DCMAKE_BUILD_TYPE=debug -DONESDK_WITH_TEST=ON
 
     - name: Run tests
