@@ -15,7 +15,7 @@
   - [安装、编译、运行](#安装编译运行)
 - [贡献](#贡献)
 - [开源协议](#开源协议)
-- [安全漏洞](#安全漏洞)
+- [Security and privacy](#security-and-privacy)
 
 ## 项目介绍
 
@@ -107,10 +107,9 @@ Note:
 
 本项目采用[Apache-2.0 License](LICENSE.txt)协议.
 
-## 安全漏洞
+## Security and privacy
 
-如果你在此项目中发现了一个潜在的安全问题，请联系[字节跳动安全中心](https://security.bytedance.com/src) 或发送邮件到[漏洞汇报](sec@bytedance.com).
-
-请**不要**创建公开的Github issue.
+This project takes security seriously.
+For vulnerability reporting and supported versions, see [SECURITY.md](SECURITY.md)
 
 
