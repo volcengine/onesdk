@@ -38,7 +38,6 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
     */ 
     struct lws_context *context = lws_get_context(wsi);
     iot_mqtt_ctx_t *ctx = (iot_mqtt_ctx_t *)lws_context_user(context);
-    ctx->wsi = wsi;
 
     switch (reason) {
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
@@ -62,7 +61,8 @@ static int callback_mqtt(struct lws *wsi, enum lws_callback_reasons reason,
         ctx->waiting_for_suback = 0;
         lws_callback_on_writable(wsi);
         lws_set_timer_usecs(wsi, ctx->config->ping_interval*1000000);
-        
+        ctx->wsi = wsi;
+
         return 0;
 
     case LWS_CALLBACK_MQTT_SUBSCRIBED:
@@ -452,7 +452,12 @@ int iot_mqtt_init(iot_mqtt_ctx_t *ctx, iot_mqtt_config_t *config) {
     // info.register_notifier_list = na;
     info.retry_and_idle_policy = &retry;
     info.user = (void*)ctx;
-    // info.client_ssl_ca_filepath = NULL;
+    if (config->enable_mqtts && config->basic_config->ssl_ca_cert) {
+        info.server_ssl_ca_mem = config->basic_config->ssl_ca_cert;
+        info.server_ssl_ca_mem_len = strlen(config->basic_config->ssl_ca_cert);
+
+        info.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    }
     struct lws_context *context = lws_create_context(&info);
     if (context == NULL) {
         lwsl_err("lws init failed\n");

@@ -70,20 +70,23 @@ jobs:
     - name: Install dependencies
       run: |
         brew install openssl
-        # Install CMake 3.31.6 from Kitware
-        curl -L https://github.com/Kitware/CMake/releases/download/v3.31.6/cmake-3.31.6-macos-universal.dmg -o cmake.dmg
+        # Install CMake 3.26.4 from Kitware
+        curl -L https://github.com/Kitware/CMake/releases/download/v3.26.4/cmake-3.26.4-macos-universal.dmg -o cmake.dmg
         hdiutil attach cmake.dmg
-        sudo cp -R /Volumes/cmake-3.31.6-macos-universal/CMake.app /Applications/
+        sudo cp -R /Volumes/cmake-3.26.4-macos-universal/CMake.app /Applications/
         sudo /Applications/CMake.app/Contents/bin/cmake-gui --install
-        hdiutil detach /Volumes/cmake-3.31.6-macos-universal
+        hdiutil detach /Volumes/cmake-3.26.4-macos-universal
         rm cmake.dmg
+        echo "CMAKE_PATH=/Applications/CMake.app/Contents/bin" >> $GITHUB_ENV
 
     - name: Configure and build
       env:
         OPENSSL_ROOT_DIR: /opt/homebrew/opt/openssl@3
         OPENSSL_LIBRARIES: /opt/homebrew/opt/openssl@3/lib
         OPENSSL_INCLUDE_DIR: /opt/homebrew/opt/openssl@3/include
+        CMAKE_PATH: /Applications/CMake.app/Contents/bin
       run: |
+        export PATH="/Applications/CMake.app/Contents/bin:$PATH"
         ./build.sh -DCMAKE_BUILD_TYPE=debug -DONESDK_WITH_TEST=ON
 
     - name: Run tests
